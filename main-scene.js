@@ -8,7 +8,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 context.register_scene_component(new Movement_Controls(context, control_box.parentElement.insertCell()));
 
             const r = context.width / context.height;
-            context.globals.graphics_state.camera_transform = Mat4.translation([0, -1.5, -11]).times(Mat4.rotation(.1, Vec.of(1,0,0)));  // Locate the camera here (inverted matrix).
+            context.globals.graphics_state.camera_transform = Mat4.translation([0, -2, -15]).times(Mat4.rotation(1.5, Vec.of(1,0,0)));  // Locate the camera here (inverted matrix).
+            this.attached = () => Mat4.translation([0, 1.5, 5]).times(Mat4.rotation(-.1, Vec.of(1,0,0)));
             context.globals.graphics_state.projection_transform = Mat4.perspective(Math.PI / 4, r, .1, 1000);
 
             const shapes = {
@@ -39,7 +40,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             }
 
             this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
-            this.lights = [new Light(Vec.of(6, 8, 10, 1), Color.of(1, 1, 1, 1), 100000)];
+            this.lights = [new Light(Vec.of(7, 8, 10, 1), Color.of(1, 1, 1, 1), 100000)];
 
             // MUSIC-RELATED PROPS
 
@@ -60,6 +61,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             this.slider_pos = 1;
 
+            // game started?
             this.broken = false;
 
             // Fixed transforms.
@@ -86,8 +88,12 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         // MUSIC-RELATED FUNCTIONS
 
         play_music() {
-            this.music_sound.pause();
-            this.music_sound_two.pause();
+            if (!this.music_sound.paused) {
+                this.music_sound.pause();
+            }
+            if (!this.music_sound_two.paused) {
+                this.music_sound_two.pause();
+            }
             if (!this.record_spinning || !this.needle_rotation_locked) {
                 return;
             }
@@ -136,20 +142,53 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             if (this.broken === true) {
                 return;
             }
-            this.music_sound.pause();
+            if (!this.music_sound.paused) {
+                this.music_sound.pause();
+            }
+            if (!this.music_sound_two.paused) {
+                this.music_sound_two.pause();
+            }
             this.record_spinning = false;
             this.isPlayable = false;
             this.break_sound.play();
-            this.attached = () => Mat4.translation([0, 4, 20]);
+
+            this.attached = () => Mat4.translation([0, 4, -20]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0)));
+            this.lights = [new Light(Vec.of(-8, 7, -10, 1), Color.of(1, 1, 1, 1), 100000)];
             this.broken = true;
+
+            // change buttons.
+            this.hide_button("rotation", true);
+            this.hide_button("b", false);
+            this.hide_button("n", true);
+            this.hide_button("m", true);
+            this.hide_button("r", true);
+
+            this.key_triggered_button("SHOOT", [" "], this.shoot);
+            this.new_line();
+            this.new_line();
+            this.key_triggered_button("W", ["w"], this.move_forward);
+            this.new_line();
+            this.key_triggered_button("A", ["a"], this.move_left);
+            this.key_triggered_button("S", ["s"], this.move_back);
+            this.key_triggered_button("D", ["d"], this.move_right);
+        }
+
+        hide_button(id, remove) {
+            if (remove === true) {
+                document.getElementById(id).style.display = "none";
+            }
+            else {
+                document.getElementById(id).style.opacity = "0";
+                document.getElementById(id).style.cursor = "auto";
+            }
         }
 
         needle_rotation_lock() {
             this.needle_rotation_locked = !this.needle_rotation_locked;
             this.start_sound.play();
-            if(this.needle_rotation_locked){
+            if (this.needle_rotation_locked){
                 document.getElementById("rotation").textContent = "Needle Rotation: Locked";   
-            }else{
+            } else {
                 document.getElementById("rotation").textContent = "Needle Rotation: Unlocked";
             }
             this.play_music();
@@ -173,7 +212,12 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             }
         }
 
-        make_control_panel()             // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
+        // GAME-RELATED FUNCTIONS
+        shoot() {
+
+        }
+
+        make_control_panel() // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         {
             // A button to control the music.
             this.key_triggered_button("Spin Disk", ["p"], this.spin_disk);
@@ -239,7 +283,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             if (this.attached !== undefined) {
                 let desired = Mat4.inverse(this.attached().times(Mat4.translation([0, 0, 5])));
-                graphics_state.camera_transform = desired.map((x, i) => Vec.from(graphics_state.camera_transform[i]).mix(x, 0.1));
+                graphics_state.camera_transform = desired.map((x, i) => Vec.from(graphics_state.camera_transform[i]).mix(x, 0.04));
             }
 
             // Button transform when pressed.
@@ -322,7 +366,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             let disk_rotation = Mat4.identity();
 
             if(this.record_spinning) {
-                disk_rotation = disk_rotation.times(Mat4.rotation(this.record_rotation_angle, Vec.of(0,1,Math.random() / 150.)));
+                disk_rotation = disk_rotation.times(Mat4.rotation(this.record_rotation_angle, Vec.of(0,1,(Math.random()-0.5) / 120.)));
                 this.record_rotation_angle += (this.record_rotation_speed)*2*Math.PI * dt;
             }
 

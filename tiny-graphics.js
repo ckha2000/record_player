@@ -557,6 +557,7 @@ class Scene_Component       // The Scene_Component superclass is the base class 
   key_triggered_button( description, shortcut_combination, callback, color = "rgb(79, 153, 92)", 
                         release_event, recipient = this, parent = this.control_panel )      // Trigger any scene behavior by assigning a key
     { const button = parent.appendChild( document.createElement( "button" ) );              // shortcut and a labelled HTML button to it.
+      button.id = shortcut_combination[0];
       button.default_color = button.style.backgroundColor = color;
       const press = () => { Object.assign( button.style, { 'z-index': "1", 'transform': "scale(1.1)" } );
                              callback.call( recipient );
