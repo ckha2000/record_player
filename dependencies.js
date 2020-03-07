@@ -618,7 +618,7 @@ window.Basic_Shader = window.classes.Basic_Shader =
         }`;
         }
     };
-    
+
 
 window.Phong_Shader = window.classes.Phong_Shader =
     class Phong_Shader extends Shader          // THE DEFAULT SHADER: This uses the Phong Reflection Model, with optional Gouraud shading.

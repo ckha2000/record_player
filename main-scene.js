@@ -85,14 +85,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         // MUSIC-RELATED FUNCTIONS
 
         play_music() {
-            this.start_sound.play();
-            this.record_spinning = !this.record_spinning;
-            this.isPlaying = !this.isPlaying;
-            if (!this.isPlayable) {
-                return;
-            }
-
-            if (!this.isPlaying || !this.record_spinning) {
+            if (!this.isPlaying || !this.record_spinning || !this.needle_rotation_locked) {
                 this.music_sound.pause();
                 this.music_sound_two.pause();
             }
@@ -106,6 +99,16 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     this.music_sound_two.play();
                 }
             }
+        }
+
+        spin_disk() {
+            this.start_sound.play();
+            this.record_spinning = !this.record_spinning;
+            this.isPlaying = !this.isPlaying;
+            if (!this.isPlayable) {
+                return;
+            }
+            this.play_music();
         }
 
         lower_volume() {   
@@ -148,6 +151,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             }else{
                 document.getElementById("rotation").textContent = "Needle Rotation: Unlocked";
             }
+            this.play_music();
         }
 
         needle_rotate_left(){
@@ -171,7 +175,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         make_control_panel()             // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         {
             // A button to control the music.
-            this.key_triggered_button("Play/Pause", ["p"], this.play_music);
+            this.key_triggered_button("Spin Disk", ["p"], this.spin_disk);
             // this.control_panel.innerHTML += "<br><br>";
             this.key_triggered_button("-", ["-"], this.lower_volume);
 
@@ -253,6 +257,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     if (this.needle_rotation_angle >= this.song_angle) {
                         this.needle_rotation_angle = this.song_angle;
                         this.needle_left = false;
+                        this.play_music();
                     }
                 }
                 else if ((this.needle_rotation_angle + this.needle_rotation_speed) <= this.song_angle_two) {
@@ -260,6 +265,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     if (this.needle_rotation_angle >= this.song_angle_two) {
                         this.needle_rotation_angle = this.song_angle_two;
                         this.needle_left = false;
+                        this.play_music();
                     }
                 }
             }
