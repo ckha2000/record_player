@@ -95,6 +95,86 @@ window.Windmill = window.classes.Windmill =
         }
     };
 
+window.Cube = window.classes.Cube =
+    class Cube extends Shape {
+        // Here's a complete, working example of a Shape subclass.  It is a blueprint for a cube.
+        constructor() {
+            super("positions", "normals"); // Name the values we'll define per each vertex.  They'll have positions and normals.
+
+            // First, specify the vertex positions -- just a bunch of points that exist at the corners of an imaginary cube.
+            this.positions.push(...Vec.cast(
+                [-1, -1, -1], [1, -1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, -1], [-1, 1, -1], [1, 1, 1], [-1, 1, 1],
+                [-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, 1], [1, -1, -1], [1, 1, 1], [1, 1, -1],
+                [-1, -1, 1], [1, -1, 1], [-1, 1, 1], [1, 1, 1], [1, -1, -1], [-1, -1, -1], [1, 1, -1], [-1, 1, -1]));
+            // Supply vectors that point away from eace face of the cube.  They should match up with the points in the above list
+            // Normal vectors are needed so the graphics engine can know if the shape is pointed at light or not, and color it accordingly.
+            this.normals.push(...Vec.cast(
+                [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0],
+                [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0],
+                [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, -1], [0, 0, -1], [0, 0, -1], [0, 0, -1]));
+
+            // Those two lists, positions and normals, fully describe the "vertices".  What's the "i"th vertex?  Simply the combined
+            // data you get if you look up index "i" of both lists above -- a position and a normal vector, together.  Now let's
+            // tell it how to connect vertex entries into triangles.  Every three indices in this list makes one triangle:
+            this.indices.push(0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6, 8, 9, 10, 9, 11, 10, 12, 13,
+                14, 13, 15, 14, 16, 17, 18, 17, 19, 18, 20, 21, 22, 21, 23, 22);
+            // It stinks to manage arrays this big.  Later we'll show code that generates these same cube vertices more automatically.
+        }
+    };
+
+window.Cube_Outline = window.classes.Cube_Outline =
+    class Cube_Outline extends Shape {
+        constructor() {
+            super("positions", "colors"); // Name the values we'll define per each vertex.
+
+            const white_c = Color.of(1, 1, 1, 1);
+            //  TODO (Requirement 5).
+            // When a set of lines is used in graphics, you should think of the list entries as
+            // broken down into pairs; each pair of vertices will be drawn as a line segment.
+            this.positions.push(...Vec.cast(
+                [1, 1, 1], [1, 1, -1],
+                [1, 1, -1],[-1, 1, -1],
+                [-1, 1, -1], [-1, 1, 1],
+                [-1, 1, 1], [1, 1, 1],
+
+                [1, 1, 1], [1, -1, 1],
+                [-1, -1, 1], [-1, 1, 1],
+                [1, 1, -1], [1, -1, -1],
+                [-1, 1, -1], [-1, -1, -1],
+
+                [1, -1, 1], [-1, -1, 1],
+                [-1, -1, 1], [-1, -1, -1],
+                [-1, -1, -1], [1, -1, -1],
+                [1, -1, -1], [1, -1, 1]
+            ));
+
+            this.colors = [ white_c, white_c, white_c, white_c, white_c, white_c, 
+                            white_c, white_c, white_c, white_c, white_c, white_c, 
+                            white_c, white_c, white_c, white_c, white_c, white_c, 
+                            white_c, white_c, white_c, white_c, white_c, white_c
+                            ];
+            this.indexed = false;       // Do this so we won't need to define "this.indices".
+        }
+    };
+
+window.Cube_Single_Strip = window.classes.Cube_Single_Strip =
+    class Cube_Single_Strip extends Shape {
+        constructor() {
+            super("positions", "normals");
+
+            // TODO (Extra credit part I)
+
+            this.positions.push(...Vec.cast( [1, 1, 1], [1, -1, 1], [-1, -1, 1], [-1, 1, 1],
+                                             [1, 1, -1], [-1, 1, -1], [-1, -1, -1], [1, -1, -1]
+            ));
+
+            this.normals.push(...Vec.cast( [1, 1, 1], [1, -1, 1], [-1, -1, 1], [-1, 1, 1],
+                                           [1, 1, -1], [-1, 1, -1], [-1, -1, -1], [1, -1, -1]
+            ));
+
+            this.indices.push(0,1,2, 0,2,3, 0,1,4, 1,4,7, 0,3,5, 0,4,5, 2,3,5, 2,6,5, 5,6,7, 4,5,7, 1,2,7, 2,6,7);
+        }
+    };
 
 window.Subdivision_Sphere = window.classes.Subdivision_Sphere =
     class Subdivision_Sphere extends Shape {
@@ -240,6 +320,252 @@ class Shape_From_File extends Shape          // A versatile standalone Shape tha
   draw( graphics_state, model_transform, material )       // Cancel all attempts to draw the shape before it loads.
     { if( this.ready ) super.draw( graphics_state, model_transform, material );   }
 }
+
+window.Disk_Frag = window.classes.Disk_Frag =
+class Disk_Frag extends Shape{
+    constructor(columns, numSections){  // numSections = number of fragments in the entire disk
+        super("positions", "normals", "texture_coords");
+        
+        var diskOuterTop = [];
+        var diskOuterBot = [];
+        var diskInnerTop = [];
+        var diskInnerBot = [];
+
+        var outerRing = 1;
+        var innerRing = 0.2;
+        var verticalScale = 0.05;
+
+        var upVec = Vec.of(0,1,0);
+        var downVec = Vec.of(0,-1,0);
+
+        // iterate through and store points
+        for(var i = 0; i < columns; i++){
+            var maxRotation = 2*Math.PI/numSections;
+            var rotation = Mat4.rotation(i*(maxRotation/(columns-1)), Vec.of(0,1,0));
+
+            diskOuterTop.push((rotation.times(Vec.of(outerRing,verticalScale,0))).to3());
+            diskOuterBot.push((rotation.times(Vec.of(outerRing,-1*verticalScale,0))).to3());
+            diskInnerTop.push((rotation.times(Vec.of(innerRing,verticalScale,0))).to3());
+            diskInnerBot.push((rotation.times(Vec.of(innerRing,-1*verticalScale,0))).to3());
+        }
+
+        // we need two of each position, each with a different normal
+        // endpoints also need horizontal normals 
+
+        // outer top ring
+        for(var i = 0; i < columns; i++){
+            this.positions.push(diskOuterTop[i]);
+            this.normals.push(upVec);
+        }
+        for(var i = 0; i < columns; i++){
+            this.positions.push(diskOuterTop[i]);
+            this.normals.push(Vec.of(diskOuterTop[i][0], 0, diskOuterTop[i][2]));
+        }
+
+        // outer bot ring
+        for(var i = 0; i < columns; i++){
+            this.positions.push(diskOuterBot[i]);
+            this.normals.push(downVec);
+        }
+        for(var i = 0; i < columns; i++){
+            this.positions.push(diskOuterBot[i]);
+            this.normals.push(Vec.of(diskOuterBot[i][0], 0, diskOuterBot[i][2]));
+        }
+
+        // inner top ring
+        for(var i = 0; i < columns; i++){
+            this.positions.push(diskInnerTop[i]);
+            this.normals.push(upVec);
+        }
+        for(var i = 0; i < columns; i++){
+            this.positions.push(diskInnerTop[i]);
+            this.normals.push(Vec.of(-1*diskInnerTop[i][0], 0, -1*diskInnerTop[i][2]));
+        }
+
+        // inner bot ring
+        for(var i = 0; i < columns; i++){
+            this.positions.push(diskInnerBot[i]);
+            this.normals.push(downVec);
+        }
+        for(var i = 0; i < columns; i++){
+            this.positions.push(diskInnerBot[i]);
+            this.normals.push(Vec.of(-1*diskInnerBot[i][0], 0, -1*diskInnerBot[i][2]));
+        }
+
+        // create outer face
+        var offset1 = 0;
+        var offset2 = 4*columns;
+        this.addIndices(offset1, offset2, columns);
+
+        // create inner face
+        offset1 = 2*columns;
+        offset2 = 6*columns;
+        this.addIndices(offset1, offset2, columns);
+
+        // create outer edge
+        offset1 = columns;
+        offset2 = 3*columns;
+        this.addIndices(offset1, offset2, columns);
+
+        // create inner edge
+        offset1 = 5*columns;
+        offset2 = 7*columns;
+        this.addIndices(offset1, offset2, columns);
+
+        // created edges if not full disk
+        if(numSections != 1){
+            offset1 = 8*columns;
+
+            // normals of the starting end are outEdgeNormal X upVec
+            var startNorm = this.normals[columns].cross(upVec);
+            this.positions.push(this.positions[0], this.positions[2*columns], this.positions[4*columns], this.positions[6*columns]);
+            this.normals.push(startNorm, startNorm, startNorm, startNorm);
+            this.indices.push(offset1,offset1+1,offset1+2, offset1+1,offset1+2,offset1+3);
+
+            offset1 += 4;
+            // normals of the ending end are outEdgeNormal X downVec
+            var endNorm = this.normals[2*columns-1].cross(downVec);
+            this.positions.push(this.positions[columns-1], this.positions[3*columns-1], this.positions[5*columns-1], this.positions[7*columns-1]);
+            this.normals.push(endNorm, endNorm, endNorm, endNorm);
+            this.indices.push(offset1,offset1+1,offset1+2, offset1+1,offset1+2,offset1+3);
+        }
+    }
+
+    addIndices(offset1, offset2, columns){
+        var ind1 = offset1;
+        var ind2 = offset2;
+        for(var i = 0; i < columns-1; i++){
+            this.indices.push(ind1, ind1+1, ind2);
+            this.indices.push(ind1+1, ind2, ind2+1);
+            ind1++;
+            ind2++;
+        }
+    }
+};
+
+window.Cylinder = window.classes.Cylinder =
+class Cylinder extends Shape{
+    constructor(columns){
+        super("positions", "normals", "texture_coords");
+        var OuterTop = [];
+        var OuterBot = [];
+
+        var outerRing = 1;
+        var verticalScale = 0.5;
+
+        var upVec = Vec.of(0,1,0);
+        var downVec = Vec.of(0,-1,0);
+
+        // iterate through and store points
+        for(var i = 0; i < columns; i++){
+            var maxRotation = 2*Math.PI;
+            var rotation = Mat4.rotation(i*(maxRotation/(columns-1)), Vec.of(0,1,0));
+
+            OuterTop.push((rotation.times(Vec.of(outerRing,verticalScale,0))).to3());
+            OuterBot.push((rotation.times(Vec.of(outerRing,-1*verticalScale,0))).to3());
+        }
+
+        // push top center point
+        this.positions.push(Vec.of(0,verticalScale,0));
+        this.normals.push(upVec);
+
+        // outer top ring
+        for(var i = 0; i < columns; i++){
+            this.positions.push(OuterTop[i]);
+            this.normals.push(upVec);
+        }
+        for(var i = 0; i < columns; i++){
+            this.positions.push(OuterTop[i]);
+            this.normals.push(Vec.of(OuterTop[i][0], 0, OuterTop[i][2]));
+        }
+
+        // push bot center point
+        this.positions.push(Vec.of(0,-1*verticalScale,0));
+        this.normals.push(downVec);
+
+        // outer bot ring
+        for(var i = 0; i < columns; i++){
+            this.positions.push(OuterBot[i]);
+            this.normals.push(downVec);
+        }
+        for(var i = 0; i < columns; i++){
+            this.positions.push(OuterBot[i]);
+            this.normals.push(Vec.of(OuterBot[i][0], 0, OuterBot[i][2]));
+        }
+
+        // add the top and bottom faces
+        var offset1 = 1;
+        var offset2 = 2*columns + 2;
+        for(var i = 0; i < columns-1; i++){
+            this.indices.push(0, offset1, offset1+1);
+            this.indices.push(columns+1, offset2, offset2+1);
+            offset1++;
+            offset2++;
+        }
+
+        // add the outer edge
+        var ind1 = columns + 1;
+        var ind2 = 3*columns + 2;
+        for(var i = 0; i < columns-1; i++){
+            this.indices.push(ind1, ind1+1, ind2);
+            this.indices.push(ind1+1, ind2, ind2+1);
+            ind1++;
+            ind2++;
+        }
+    }
+}
+
+window.Pyramid = window.classes.Pyramid =     // creates downward facing pyramid
+class Pyramid extends Shape{                           // the center of the base of the prism is at (0,0,0)
+    constructor(){
+        super("positions", "normals", "texture_coords");
+        
+        // need four centers for apex 
+        this.positions.push(Vec.of(1,0,1), Vec.of(1,0,-1), Vec.of(-1,0,-1), Vec.of(-1,0,1));
+        this.normals.push(...Vec.cast([0,1,0], [0,1,0], [0,1,0], [0,1,0]));
+        this.indices.push(0,1,2, 0,2,3);
+
+        // make each side
+        var normalVec = Vec.of(-1,-1,0);
+        this.positions.push(Vec.of(-1,0,-1), Vec.of(-1,0,1), Vec.of(0,-1,0));
+        this.normals.push(normalVec, normalVec, normalVec);
+        this.indices.push(4,5,6);
+
+        var normalVec = Vec.of(0,-1,1);
+        this.positions.push(Vec.of(1,0,1), Vec.of(-1,0,1), Vec.of(0,-1,0));
+        this.normals.push(normalVec, normalVec, normalVec);
+        this.indices.push(7,8,9);
+
+        var normalVec = Vec.of(1,-1,0);
+        this.positions.push(Vec.of(1,0,1), Vec.of(1,0,-1), Vec.of(0,-1,0));
+        this.normals.push(normalVec, normalVec, normalVec);
+        this.indices.push(10,11,12);
+
+        var normalVec = Vec.of(0,-1,-1);
+        this.positions.push(Vec.of(1,0,-1), Vec.of(-1,0,-1), Vec.of(0,-1,0));
+        this.normals.push(normalVec, normalVec, normalVec);
+        this.indices.push(13,14,15);
+    }
+}
+
+window.Needle = window.classes.Needle =
+class Needle extends Shape{
+    constructor(){
+        super("positions", "normals", "texture_coords");
+
+        var arm_transform = Mat4.translation(Vec.of(0,0.7,4)).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0)).times(Mat4.scale(Vec.of(0.15,8,0.15))));
+        Cylinder.insert_transformed_copy_into(this, [15], arm_transform);
+
+        var base_transform = Mat4.translation(Vec.of(0,0.4,0)).times(Mat4.scale(Vec.of(0.6,1.4,0.6)));             // draw the base separately in the scene
+        Cylinder.insert_transformed_copy_into(this, [15], base_transform);
+
+        var needle_cylinder_transform = Mat4.translation(Vec.of(0,0.7,8)).times(Mat4.scale(Vec.of(0.4,0.4,0.4)));
+        Cylinder.insert_transformed_copy_into(this, [15], needle_cylinder_transform);
+
+        var needle_transform = Mat4.translation(Vec.of(0,0.5,8)).times(Mat4.scale(Vec.of(0.05, 0.3, 0.05)));
+        Pyramid.insert_transformed_copy_into(this, [], needle_transform);
+    }
+};
 
 
 window.Basic_Shader = window.classes.Basic_Shader =
@@ -667,150 +993,3 @@ window.Movement_Controls = window.classes.Movement_Controls =
         }
     };
 
-
-window.Tutorial_Animation = window.classes.Tutorial_Animation =
-    class Tutorial_Animation extends Scene_Component  // This Scene_Component can be added to a display canvas.  This particular one
-    {                                                 // sets up the machinery to draw a simple scene demonstrating a few concepts.
-                                                      // Scroll down to the display() method at the bottom to see where the shapes are drawn.
-        constructor(context, control_box)             // The scene begins by requesting the camera, shapes, and materials it will need.
-        {
-            super(context, control_box);              // First, include a couple other helpful components, including one that moves you around:
-            if (!context.globals.has_controls)
-                context.register_scene_component(new Movement_Controls(context, control_box.parentElement.insertCell()));
-
-            // Define the global camera and projection matrices, which are stored in a scratchpad for globals.  The projection is special
-            // because it determines how depth is treated when projecting 3D points onto a plane.  The function perspective() makes one.
-            // Its input arguments are field of view, aspect ratio, and distances to the near plane and far plane.
-            context.globals.graphics_state.camera_transform = Mat4.translation([0, 0, -30]);    // Locate the camera here (inverted matrix).
-            context.globals.graphics_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, .1, 1000);
-
-            const shapes = {
-                'triangle': new Triangle(),                // At the beginning of our program, load one of each of these shape
-                'strip': new Square(),                  // definitions onto the GPU.  NOTE:  Only do this ONCE per shape
-                'bad_tetrahedron': new Tetrahedron(false),      // design.  Once you've told the GPU what the design of a cube is,
-                'tetrahedron': new Tetrahedron(true),       // it would be redundant to tell it again.  You should just re-use
-                'windmill': new Windmill(10),            // the one called "box" more than once in display() to draw
-                'box': new Cube(),                    // multiple cubes.  Don't define more than one blueprint for the
-                'ball': new Subdivision_Sphere(4)
-            }; // same thing here.
-            this.submit_shapes(context, shapes);
-
-            [this.hover, this.t] = [false, 0];    // Define a couple of data members called "hover" and "t".
-
-            // *** Materials: *** Define more data members here, returned from the material() function of our shader.  Material objects contain
-            //                    shader configurations.  They are used to light and color each shape.  Declare new materials as temps when
-            //                    needed; they're just cheap wrappers for some numbers.  1st parameter:  Color (4 floats in RGBA format).
-            this.clay = context.get_instance(Phong_Shader).material(Color.of(.9, .5, .9, 1), {
-                ambient: .4,
-                diffusivity: .4
-            });
-            this.plastic = this.clay.override({specularity: .6});
-            this.glass = context.get_instance(Phong_Shader).material(Color.of(.5, .5, 1, .2), {
-                ambient: .4,
-                specularity: .4
-            });
-            this.fire = context.get_instance(Funny_Shader).material();
-            this.stars = this.plastic.override({texture: context.get_instance("assets/stars.png")});
-
-            // *** Lights: *** Values of vector or point lights.  They'll be consulted by the shader when coloring shapes.  Two different lights
-            //                 *per shape* are supported by in the example shader; more requires changing a number in it or other tricks.
-            //                 Arguments to construct a Light(): Light source position or vector (homogeneous coordinates), color, and intensity.
-            this.lights = [new Light(Vec.of(30, 30, 34, 1), Color.of(0, .4, 0, 1), 100000),
-                new Light(Vec.of(-10, -20, -14, 0), Color.of(1, 1, .3, 1), 100)];
-        }
-
-        make_control_panel()               // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        {
-            this.control_panel.innerHTML += "Creature rotation angle: <br>";    // This line adds stationary text.  The next line adds live text.
-            this.live_string(box => {
-                box.textContent = (this.hover ? 0 : (this.t % (2 * Math.PI)).toFixed(2)) + " radians"
-            });
-            this.new_line();
-            this.key_triggered_button("Hover in place", ["h"], function () {
-                this.hover ^= 1;
-            });    // Add a button for controlling the scene.
-        }
-
-        show_explanation(document_element)          // Write the demo's description (a big long string) onto the web document.
-        {
-            document_element.innerHTML += `<p>If you've written a computer program before but not in JavaScript, rest assured that it is mostly the same as other languages.  <a href=https://piazza.com/class_profile/get_resource/j855t03rsfv1cn/j9k7wljazkdsb target='_blank'>This .pdf document</a> lists down the similarities and differences between C++ and JavaScript that you might encounter here.  Google "es6" instead of "JavaScript" when learning to avoid missing newer capabilities.  Generally, you'll want to get comfortable with imperative, object oriented, and functional programming styles to use this library.   
-    </p><p>This first article is meant to show how best to organize a 3D graphics program in JavaScript using WebGL -- a \"hello world\" example, or more accurately, \"hello triangle\". A lot of \"boilerplate\" code is required just to get a single 3D triangle to draw on a web canvas, and it's not at all obvious how to organize that code so that you can be flexible later, when you'll probably want to dynamically switch out pieces of your program whenever you want - whether they be other shader programs, vertex arrays (shapes), textures (images), or entire scenes. You might even want those things to happen whenever the user of your program presses a button.    
-    </p><p>This \"hello triangle\" example is organized to do all that while keeping its source code tiny. A ~500 line library file called tiny-graphics.js sets up all the flexibility mentioned above, and it's shared by all pages on this encyclopedia.  That file can always be accessed <a href=/tiny-graphics.js>here</a>.  A file called dependencies.js contains all the code required by the particular article you're viewing on the encyclopedia of code. Every article you navigate to on the encyclopedia will provide you with a minimal copy of dependencies.js, containing only the code that your current article needs.    
-    </p><p>If you have never written a graphics program before, you'll need to know what a transformation matrix is in 3D graphics. Check out <a href=https://piazza.com/class_profile/get_resource/j855t03rsfv1cn/j9k7wl8ijmks0 target='_blank'>this other .pdf document</a> explaining those, including the three special matrices (rotation, translation, and scale) that you'll see over and over in graphics programs like this one. Finally, scroll down to the source code at the bottom to see how these functions are used to generate special matrices that draw the shapes in the right places in the 3D world.    
-    </p><p>The scene shown here demonstrates a lot of concepts at once using very little code.  These include drawing your first triangle, storing trivial shapes, storing lights and materials and shader programs, flat vs. smooth shading, and matrix transformations.   You can see all the parts of the scene being drawn by the code written in the "display" function; these parts are all independent from one another, so feel free delete whichever sections you want from there and the other shapes will remain.  Save your changes to produce your own page.  For pretty demonstrations of more advanced topics, such as <a href=/Surfaces_Demo>Surface Patch shapes</a>, <a href=/Inertia_Demo>Inertia</a>, <a href=/Collision_Demo>Collision Detection</a>, and <a href=/Ray_Tracer>Ray Tracing</a>, use the blue bar at the top of this page to visit the next articles.  To see how a minimal but functional game works, check out <a href=/Billiards>Billiards</a>.  To train yourself to get matrix order right when placing shapes, play the <a href=/Bases_Game>Bases Game</a>.</p>
-   `
-        }
-
-        draw_arm(graphics_state, model_transform)                   // An example of how to break up the work of drawing into other functions.
-        {
-            const arm = model_transform.times(Mat4.translation([0, 0, 3 + 1]));
-            this.shapes.ball.draw(graphics_state, arm, this.plastic.override({color: Color.of(0, 0, 1, .7)}));
-        }
-
-        display(graphics_state) {
-            let model_transform = Mat4.identity();      // This will be a temporary matrix that helps us draw most shapes.
-            // It starts over as the identity every single frame - coordinate axes at the origin.
-            graphics_state.lights = this.lights;        // Override graphics_state with the default lights of this class.
-
-            const yellow = Color.of(1, 1, 0, 1), gray = Color.of(.5, .5, .5, 1), green = Color.of(0, .5, 0, 1);
-            /**********************************
-             Start coding down here!!!!
-             **********************************/         // From here on down it's just some example shapes drawn for you -- freely replace them
-                                                         // with your own!  Notice the usage of the functions translation(), scale(), and rotation()
-                                                         // to generate matrices, and the functions times(), which generates products of matrices.
-
-            model_transform = model_transform.times(Mat4.translation([0, 5, 0]));
-            this.shapes.triangle.draw(graphics_state, model_transform, this.stars);   // Draw the top triangle.
-
-            model_transform = model_transform.times(Mat4.translation([0, -2, 0]));  // Tweak our coordinate system downward for the next shape.
-            this.shapes.strip.draw(graphics_state, model_transform, this.plastic.override({color: gray}));      // Draw the square.
-            // Find how much time has passed in seconds. Use that as input to build
-            const t = this.t = graphics_state.animation_time / 1000;  // and store a couple rotation matrices that vary over time.
-            const tilt_spin = Mat4.rotation(12 * t, Vec.of(.1, .8, .1)),
-                funny_orbit = Mat4.rotation(2 * t, Vec.of(Math.cos(t), Math.sin(t), .7 * Math.cos(t)));
-
-            // All the shapes in a scene can share influence of the same pair of lights.  Alternatively, here's what happens when you
-            // use different lights on part of a scene.  All the shapes below this line of code will use these moving lights instead.
-            graphics_state.lights = [new Light(tilt_spin.times(Vec.of(30, 30, 34, 1)), Color.of(0, .4, 0, 1), 100000),
-                new Light(tilt_spin.times(Vec.of(-10, -20, -14, 0)), Color.of(1, 1, .3, 1), 100 * Math.cos(t / 10))];
-
-            // The post_multiply() function is like times(), but be careful with it; it modifies the originally stored matrix in
-            // place rather than generating a new matrix, which could throw off your attempts to maintain a history of matrices.
-            model_transform.post_multiply(Mat4.translation([0, -2, 0]));
-            // In the constructor, we requested two tetrahedron shapes, one with flat shading and one with smooth.
-            this.shapes.tetrahedron.draw(graphics_state, model_transform.times(funny_orbit), this.plastic);      // Show the flat tetrahedron.
-
-            model_transform.post_multiply(Mat4.translation([0, -2, 0]));
-            this.shapes.bad_tetrahedron.draw(graphics_state, model_transform.times(funny_orbit),   // Show the smooth tetrahedron.  It's worse.
-                this.plastic.override({color: Color.of(.5, .5, .5, 1)}));
-
-            // Draw three of the "windmill" shape.  The first one spins over time.  The second demonstrates a custom shader, because
-            // the material "fire" above was built from a different shader class than the others.  The third shows off transparency.
-            model_transform.post_multiply(Mat4.translation([0, -2, 0]));
-            this.shapes.windmill.draw(graphics_state, model_transform.times(tilt_spin), this.plastic);
-            model_transform.post_multiply(Mat4.translation([0, -2, 0]));
-            this.shapes.windmill.draw(graphics_state, model_transform, this.fire);
-            model_transform.post_multiply(Mat4.translation([0, -2, 0]));
-            this.shapes.windmill.draw(graphics_state, model_transform, this.glass);
-
-            // Now to demonstrate some more useful (but harder to build) shapes:  A Cube and a Subdivision_Sphere.
-            // If you look in those two classes they're a bit less trivial than the previous shapes.
-            model_transform.post_multiply(Mat4.translation([0, -2, 0]));                                         // Draw the ground plane:
-            this.shapes.box.draw(graphics_state, model_transform.times(Mat4.scale([15, .1, 15])), this.plastic.override({color: green}));
-
-            model_transform = model_transform.times(Mat4.translation(Vec.of(10, 10, 0)));                        // Move up off the ground.
-            // Spin the coordinate system if the hover button hasn't been pressed:
-            if (!this.hover) model_transform = model_transform.times(Mat4.rotation(-this.t, Vec.of(0, 1, 0)));
-            // Begin drawing a "creature" with two arms.
-            this.shapes.ball.draw(graphics_state, model_transform, this.plastic.override({color: Color.of(.8, .8, .8, 1)}));
-            // Placing shapes that barely touch each other requires knowing and adding half the length of each.
-            model_transform = model_transform.times(Mat4.translation(Vec.of(0, -(1 + .2), 0)));
-            this.shapes.box.draw(graphics_state, model_transform.times(Mat4.scale([3, .2, 3])), this.plastic.override({color: yellow}));
-            // Each loop iteration, the following will draw the same thing on a different side due to a reflection:
-            for (let side of [-1, 1])                                                     // For each of the two values -1 and 1, reflect the
-            {
-                let flipped = model_transform.times(Mat4.scale([1, 1, side]));            // coordinate system (or not) depending on the value.
-                this.draw_arm(graphics_state, flipped);                                   // Example of how to call your own function, passing
-            }                                                                             // in your matrix.
-        }
-    };

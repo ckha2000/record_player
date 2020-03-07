@@ -1,84 +1,3 @@
-window.Cube = window.classes.Cube =
-    class Cube extends Shape {
-        // Here's a complete, working example of a Shape subclass.  It is a blueprint for a cube.
-        constructor() {
-            super("positions", "normals"); // Name the values we'll define per each vertex.  They'll have positions and normals.
-
-            // First, specify the vertex positions -- just a bunch of points that exist at the corners of an imaginary cube.
-            this.positions.push(...Vec.cast(
-                [-1, -1, -1], [1, -1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, -1], [-1, 1, -1], [1, 1, 1], [-1, 1, 1],
-                [-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, 1], [1, -1, -1], [1, 1, 1], [1, 1, -1],
-                [-1, -1, 1], [1, -1, 1], [-1, 1, 1], [1, 1, 1], [1, -1, -1], [-1, -1, -1], [1, 1, -1], [-1, 1, -1]));
-            // Supply vectors that point away from eace face of the cube.  They should match up with the points in the above list
-            // Normal vectors are needed so the graphics engine can know if the shape is pointed at light or not, and color it accordingly.
-            this.normals.push(...Vec.cast(
-                [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0],
-                [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0],
-                [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, -1], [0, 0, -1], [0, 0, -1], [0, 0, -1]));
-
-            // Those two lists, positions and normals, fully describe the "vertices".  What's the "i"th vertex?  Simply the combined
-            // data you get if you look up index "i" of both lists above -- a position and a normal vector, together.  Now let's
-            // tell it how to connect vertex entries into triangles.  Every three indices in this list makes one triangle:
-            this.indices.push(0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6, 8, 9, 10, 9, 11, 10, 12, 13,
-                14, 13, 15, 14, 16, 17, 18, 17, 19, 18, 20, 21, 22, 21, 23, 22);
-            // It stinks to manage arrays this big.  Later we'll show code that generates these same cube vertices more automatically.
-        }
-    };
-
-window.Cube_Outline = window.classes.Cube_Outline =
-    class Cube_Outline extends Shape {
-        constructor() {
-            super("positions", "colors"); // Name the values we'll define per each vertex.
-
-            const white_c = Color.of(1, 1, 1, 1);
-            //  TODO (Requirement 5).
-            // When a set of lines is used in graphics, you should think of the list entries as
-            // broken down into pairs; each pair of vertices will be drawn as a line segment.
-            this.positions.push(...Vec.cast(
-                [1, 1, 1], [1, 1, -1],
-                [1, 1, -1],[-1, 1, -1],
-                [-1, 1, -1], [-1, 1, 1],
-                [-1, 1, 1], [1, 1, 1],
-
-                [1, 1, 1], [1, -1, 1],
-                [-1, -1, 1], [-1, 1, 1],
-                [1, 1, -1], [1, -1, -1],
-                [-1, 1, -1], [-1, -1, -1],
-
-                [1, -1, 1], [-1, -1, 1],
-                [-1, -1, 1], [-1, -1, -1],
-                [-1, -1, -1], [1, -1, -1],
-                [1, -1, -1], [1, -1, 1]
-            ));
-
-            this.colors = [ white_c, white_c, white_c, white_c, white_c, white_c, 
-                            white_c, white_c, white_c, white_c, white_c, white_c, 
-                            white_c, white_c, white_c, white_c, white_c, white_c, 
-                            white_c, white_c, white_c, white_c, white_c, white_c
-                            ];
-            this.indexed = false;       // Do this so we won't need to define "this.indices".
-        }
-    };
-
-window.Cube_Single_Strip = window.classes.Cube_Single_Strip =
-    class Cube_Single_Strip extends Shape {
-        constructor() {
-            super("positions", "normals");
-
-            // TODO (Extra credit part I)
-
-            this.positions.push(...Vec.cast( [1, 1, 1], [1, -1, 1], [-1, -1, 1], [-1, 1, 1],
-                                             [1, 1, -1], [-1, 1, -1], [-1, -1, -1], [1, -1, -1]
-            ));
-
-            this.normals.push(...Vec.cast( [1, 1, 1], [1, -1, 1], [-1, -1, 1], [-1, 1, 1],
-                                           [1, 1, -1], [-1, 1, -1], [-1, -1, -1], [1, -1, -1]
-            ));
-
-            this.indices.push(0,1,2, 0,2,3, 0,1,4, 1,4,7, 0,3,5, 0,4,5, 2,3,5, 2,6,5, 5,6,7, 4,5,7, 1,2,7, 2,6,7);
-        }
-    };
-
 window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
     class Record_Player_Simulator extends Scene_Component {
         constructor(context, control_box) {
@@ -95,7 +14,9 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             const shapes = {
                 'box': new Square(),
                 'record_player': new Shape_From_File("assets/record_player.obj"),
-                'button': new Shape_From_File("assets/cube.obj")
+                'button': new Shape_From_File("assets/cube.obj"),
+                'needle': new Needle(),
+                'disk': new Disk_Frag(30, 1)
             };
 
             // At the beginning of our program, load one of each of these shape
@@ -117,14 +38,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             }
 
             this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
-
             this.lights = [new Light(Vec.of(7, 5, 10, 1), Color.of(1, 1, 1, 1), 100000)];
-            
-            this.colorList = [];
-            this.set_colors();
-
-            this.heightScale = 1.5;
-            this.widthScale = 1;
 
             // MUSIC-RELATED PROPS
 
@@ -148,18 +62,15 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             // Fixed transforms.
             this.player_transform = Mat4.scale([2, 2, 2]);
             this.sliderbox_transform = Mat4.translation([2, -0.48, 3.47]).times(Mat4.scale([0.6, 0.25, 0.25]));
-        }
 
-        set_colors() {
-            // TODO:  Create a class member variable to store your cube's colors.
-            // if there are any colors already set, reset the array
-            while(this.colorList.length > 0){
-                this.colorList.pop();
-            }
+            this.needle_rotation_angle = 0;
+            this.needle_rotation_locked = true;
+            this.needle_rotation_speed = Math.PI/64;
+            this.max_angle = 3*Math.PI/16;
 
-            for(var i = 0; i < 8; i++){
-                this.colorList.push(Color.of(Math.random(), Math.random(), Math.random(), 1));
-            }
+            this.record_spinning = false;
+            this.record_rotation_speed = 1;             // rev/sec
+            this.record_rotation_angle = 0;
         }
 
         // MUSIC-RELATED FUNCTIONS
@@ -211,24 +122,73 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.attached = () => Mat4.translation([0, 4, 20]);
         }
 
+        needle_rotation_lock(){
+            this.needle_rotation_locked = !this.needle_rotation_locked;
+            if(this.needle_rotation_locked){
+                document.getElementById("rotation").textContent = "Rotation: locked";   
+            }else{
+                document.getElementById("rotation").textContent = "Rotation: unlocked";
+            }
+            
+        }
+
+        needle_rotate_left(){
+            if(!this.needle_rotation_locked){
+                if((this.needle_rotation_angle + this.needle_rotation_speed) <= this.max_angle){
+                        this.needle_rotation_angle += this.needle_rotation_speed;
+                }          
+            }
+        }
+
+        needle_rotate_right(){
+            if(!this.needle_rotation_locked){
+                if((this.needle_rotation_angle - this.needle_rotation_speed) >= 0){
+                        this.needle_rotation_angle -= this.needle_rotation_speed;
+                }          
+            }
+        }
+
+        rotate_disk(){
+            this.record_spinning = !this.record_spinning; 
+        }
+
+
+
         make_control_panel()             // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         {
             // A button to control the music.
             this.key_triggered_button("Play/Pause", ["p"], this.play_music);
             // this.control_panel.innerHTML += "<br><br>";
             this.key_triggered_button("-", ["-"], this.lower_volume);
+
             const volumeText = document.createElement("span");
             volumeText.id = "volume";
             volumeText.textContent = "VOLUME: " + music_sound.volume.toFixed(1);
             const vol_controls = this.control_panel.appendChild(volumeText);
             vol_controls.style.margin = "5px";
+
             this.key_triggered_button("+", ["="], this.raise_volume);
             this.key_triggered_button("Smash", ["b"], this.break_stuff);
+            this.new_line();
+            this.new_line();
+
+            const rotationText = document.createElement("span");
+            rotationText.id = "rotation";
+            rotationText.textContent = "Rotation: locked";
+            const rot_controls = this.control_panel.appendChild(rotationText);
+            rot_controls.style.margin = "5px";
+            this.new_line();
+
+            this.key_triggered_button("(Un)lock Rotation", ["r"], this.needle_rotation_lock);
+            this.key_triggered_button("Rotate Left", ["n"], this.needle_rotate_left);
+            this.key_triggered_button("Rotate Right", ["m"], this.needle_rotate_right);
+            this.key_triggered_button("Rotate/Stop Rotating Disk", ["y"], this.rotate_disk);
         }
 
         display(graphics_state) {
             graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
             const t = this.t = graphics_state.animation_time / 1000;
+            const dt = graphics_state.animation_delta_time /1000;
 
             if (this.attached !== undefined) {
                 let desired = Mat4.inverse(this.attached().times(Mat4.translation([0, 0, 5])));
@@ -237,7 +197,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             // Button transform when pressed.
             let btn_transform = Mat4.translation([0, -0.48, 3.45 + this.btn_z]).times(Mat4.scale([0.3, 0.3, 0.3]));
-            if (this.isPlaying === true && this.btn_z > -0.21) {
+            if (this.isPlaying === true && this.btn_z > -0.09) {
                 switch(this.btn_z) {
                     case -.09:
                         break;
@@ -272,7 +232,22 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             let slider_transform = Mat4.translation([1.5 + (this.slider_pos), -0.48, 3.45]).times(Mat4.scale([0.075, 0.3, 0.3]));
 
             // Needle transform when record player is started/stopped.
+            let needle_position = Mat4.translation(Vec.of(2.8,0.2,-2.8));
+            let needle_scale = Mat4.scale(Vec.of(0.5,0.5,0.5));
+            let needle_rotation = Mat4.rotation(this.needle_rotation_angle, Vec.of(0,-1,0));
 
+            let needle_transform = needle_position.times(needle_rotation.times(needle_scale));                               
+            
+
+            let disk_position = Mat4.translation(Vec.of(0,0.3,0));
+            let disk_scale = Mat4.scale(Vec.of(2.8,0.5,2.8));
+            let disk_rotation = Mat4.rotation(this.record_rotation_angle, Vec.of(0,1,0));
+
+            if(this.record_spinning){
+                 this.record_rotation_angle += this.record_rotation_speed*2*Math.PI * dt;   
+            }
+
+            let disk_transform = disk_position.times(disk_rotation.times(disk_scale));
 
             /*
             // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper*/
@@ -281,6 +256,9 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.shapes.button.draw(graphics_state, btn_transform, this.materials.phong_secondary);
             this.shapes.record_player.draw(graphics_state, this.player_transform, this.materials.phong_primary);
             this.shapes.button.draw(graphics_state, slider_transform, this.materials.phong_secondary);
+            this.shapes.needle.draw(graphics_state, needle_transform, this.default);
+            this.shapes.disk.draw(graphics_state, disk_transform, this.default);
+
             //this.shapes.box.draw(graphics_state, slider_transform, this.plastic);
         }
     };
