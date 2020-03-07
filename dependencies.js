@@ -498,7 +498,7 @@ class Cylinder extends Shape{
         var offset2 = 2*columns + 2;
         for(var i = 0; i < columns-1; i++){
             this.indices.push(0, offset1, offset1+1);
-            this.indices.push(columns+1, offset2, offset2+1);
+            this.indices.push(2*columns+1, offset2, offset2+1);
             offset1++;
             offset2++;
         }
