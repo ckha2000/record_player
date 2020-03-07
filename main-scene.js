@@ -1,5 +1,5 @@
 window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
-    class Record_Player_Simulator extends Scene_Component {
+    class Record_Player_Simulator extends Simulation {
         constructor(context, control_box) {
             // The scene begins by requesting the camera, shapes, and materials it will need.
             super(context, control_box);
@@ -202,7 +202,36 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.key_triggered_button("(Un)lock Rotation", ["r"], this.needle_rotation_lock);
         }
 
+        update_state(dt) {
+                // INSERT CODE FOR PHYICS AND COLLISION
+            for( let a of this.bodies )
+            {                                                 // Cache the inverse of matrix of body "a" to save time.
+              
+                  a.inverse = Mat4.inverse( a.drawn_location );
+
+                  if (a.moveable)
+                    a.linear_velocity[1] += dt * -9.8;
+
+                  if( a.linear_velocity.norm() == 0 )
+                    continue;
+                                                              // *** Collision process is here ***
+                                                              // Loop through all bodies again (call each "b"):
+                  for( let b of this.bodies )                                      
+                  {                               // Pass the two bodies and the collision shape to check_if_colliding():
+                    if( !a.check_if_colliding( b ) )
+                      continue;
+
+                                                  // If we get here, we collided
+                    if( a.linear_velocity[1] < 0 )
+                        a.linear_velocity = Vec.of(Math.random(), a.linear_velocity[1] * -0.8, Math.random());
+                                                 
+
+                  }
+            }    
+        }
+
         display(graphics_state) {
+            super.display(graphics_state);
             graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
             const t = this.t = graphics_state.animation_time / 1000;
             const dt = graphics_state.animation_delta_time /1000;
