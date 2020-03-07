@@ -86,25 +86,16 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         // MUSIC-RELATED FUNCTIONS
 
         play_music() {
+            this.music_sound.pause();
+            this.music_sound_two.pause();
             if (!this.record_spinning || !this.needle_rotation_locked) {
-                if (!this.music_sound.paused) {
-                    this.music_sound.pause();
-                }
-                if (!this.music_sound_two.paused) {
-                    this.music_sound_two.pause();
-                }
+                return;
             }
             else {
                 if (this.needle_rotation_angle === this.song_angle) {
-                    if (!this.music_sound_two.paused) {
-                        this.music_sound_two.pause();
-                    }
                     this.music_sound.play();
                 }
                 if (this.needle_rotation_angle === this.song_angle_two) {
-                    if (!this.music_sound.paused) {
-                        this.music_sound.pause();
-                    }
                     this.music_sound_two.play();
                 }
             }
@@ -123,6 +114,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             if (this.music_sound.volume > .1) {
                 this.slide_sound.play();
                 this.music_sound.volume -= .1;
+                this.music_sound_two.volume -= .1;
             }
             let vol = Math.floor(music_sound.volume * 10) / 10;
             this.slider_pos = vol;
@@ -133,6 +125,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             if (this.music_sound.volume < 1) {
                 this.slide_sound.play();
                 this.music_sound.volume += .1;
+                this.music_sound_two.volume += .1;
             }
             let vol = Math.floor(music_sound.volume * 10) / 10;
             this.slider_pos = vol;
@@ -143,12 +136,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             if (this.broken === true) {
                 return;
             }
-            if (!this.music_sound.paused) {
-                this.music_sound.pause();
-            }
-            if (!this.music_sound_two.paused) {
-                this.music_sound_two.pause();
-            }
+            this.music_sound.pause();
             this.record_spinning = false;
             this.isPlayable = false;
             this.break_sound.play();
