@@ -61,6 +61,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             this.slider_pos = 1;
 
+            this.broken = false;
+
             // Fixed transforms.
             this.player_transform = Mat4.scale([2, 2, 2]);
             this.sliderbox_transform = Mat4.translation([2, -0.48, 3.47]).times(Mat4.scale([0.6, 0.25, 0.25]));
@@ -69,8 +71,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.needle_rotation_angle = 0;
             this.needle_rotation_locked = true;
             this.needle_rotation_speed = .05;
-            this.song_angle = 0.25;
-            this.song_angle_two = 0.5;
+            this.song_angle = 0.3;
+            this.song_angle_two = 0.6;
             this.needle_left = false;
             this.needle_right = false;
 
@@ -127,11 +129,15 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         }
 
         break_stuff () {
+            if (this.broken === true) {
+                return;
+            }
             this.music_sound.pause();
             this.isPlaying = false;
             this.isPlayable = false;
             this.break_sound.play();
             this.attached = () => Mat4.translation([0, 4, 20]);
+            this.broken = true;
         }
 
         needle_rotation_lock(){
@@ -279,10 +285,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             let disk_position = Mat4.translation(Vec.of(0,0.3,0));
             let disk_scale = Mat4.scale(Vec.of(2.8,0.5,2.8));
-            let disk_rotation = Mat4.rotation(this.record_rotation_angle, Vec.of(0,1,0));
+            let disk_rotation = Mat4.identity();
 
             if(this.record_spinning) {
-                disk_rotation = disk_rotation.times(Mat4.rotation(this.record_rotation_angle, Vec.of(0,1,Math.random() / 200.)));
+                disk_rotation = disk_rotation.times(Mat4.rotation(this.record_rotation_angle, Vec.of(0,1,Math.random() / 150.)));
                 this.record_rotation_angle += this.record_rotation_speed*2*Math.PI * dt;
             }
 
