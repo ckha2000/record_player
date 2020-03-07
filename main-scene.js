@@ -35,11 +35,11 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 phong_secondary: context.get_instance( Phong_Shader ).material( Color.of(.2, .9, .5, 1)),
                 grey_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/grey_texture.jpg", false )}),
                 gold_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/gold_texture.jpg", false )}),
-                record_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/record_texture.jpg", false )})
+                record_texture: context.get_instance( Phong_Shader ).material( Color.of(0.15,0.15,0.15,1) , {specularity: 1.}),
             }
 
             this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
-            this.lights = [new Light(Vec.of(7, 5, 10, 1), Color.of(1, 1, 1, 1), 100000)];
+            this.lights = [new Light(Vec.of(6, 8, 10, 1), Color.of(1, 1, 1, 1), 100000)];
 
             // MUSIC-RELATED PROPS
 
