@@ -618,62 +618,7 @@ window.Basic_Shader = window.classes.Basic_Shader =
         }`;
         }
     };
-
-
-window.Funny_Shader = window.classes.Funny_Shader =
-    class Funny_Shader extends Shader         // Simple "procedural" texture shader, with texture coordinates but without an input image.
-    {
-        material() {
-            return {shader: this}
-        }  // Materials here are minimal, without any settings.
-        map_attribute_name_to_buffer_name(name)                  // We'll pull single entries out per vertex by field name.  Map
-        {                                                        // those names onto the vertex array names we'll pull them from.
-            return {object_space_pos: "positions", tex_coord: "texture_coords"}[name];
-        }      // Use a simple lookup table.
-        // Define how to synchronize our JavaScript's variables to the GPU's:
-        update_GPU(g_state, model_transform, material, gpu = this.g_addrs, gl = this.gl) {
-            const [P, C, M] = [g_state.projection_transform, g_state.camera_transform, model_transform],
-                PCM = P.times(C).times(M);
-            gl.uniformMatrix4fv(gpu.projection_camera_model_transform_loc, false, Mat.flatten_2D_to_1D(PCM.transposed()));
-            gl.uniform1f(gpu.animation_time_loc, g_state.animation_time / 1000);
-        }
-
-        shared_glsl_code()            // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
-        {
-            return `precision mediump float;
-              varying vec2 f_tex_coord;
-      `;
-        }
-
-        vertex_glsl_code()           // ********* VERTEX SHADER *********
-        {
-            return `
-        attribute vec3 object_space_pos;
-        attribute vec2 tex_coord;
-        uniform mat4 projection_camera_model_transform;
-
-        void main()
-        { gl_Position = projection_camera_model_transform * vec4(object_space_pos, 1.0);   // The vertex's final resting place (in NDCS).
-          f_tex_coord = tex_coord;                                       // Directly use original texture coords and interpolate between.
-        }`;
-        }
-
-        fragment_glsl_code()           // ********* FRAGMENT SHADER *********
-        {
-            return `
-        uniform float animation_time;
-        void main()
-        { float a = animation_time, u = f_tex_coord.x, v = f_tex_coord.y;   
-                                                                  // Use an arbitrary math function to color in all pixels as a complex                                                                  
-          gl_FragColor = vec4(                                    // function of the UV texture coordintaes of the pixel and of time.  
-            2.0 * u * sin(17.0 * u ) + 3.0 * v * sin(11.0 * v ) + 1.0 * sin(13.0 * a),
-            3.0 * u * sin(18.0 * u ) + 4.0 * v * sin(12.0 * v ) + 2.0 * sin(14.0 * a),
-            4.0 * u * sin(19.0 * u ) + 5.0 * v * sin(13.0 * v ) + 3.0 * sin(15.0 * a),
-            5.0 * u * sin(20.0 * u ) + 6.0 * v * sin(14.0 * v ) + 4.0 * sin(16.0 * a));
-        }`;
-        }
-    };
-
+    
 
 window.Phong_Shader = window.classes.Phong_Shader =
     class Phong_Shader extends Shader          // THE DEFAULT SHADER: This uses the Phong Reflection Model, with optional Gouraud shading.
