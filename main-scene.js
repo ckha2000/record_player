@@ -79,8 +79,8 @@ window.Cube_Single_Strip = window.classes.Cube_Single_Strip =
         }
     };
 
-window.Term_Project_Scene = window.classes.Term_Project_Scene =
-    class Term_Project_Scene extends Scene_Component {
+window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
+    class Record_Player_Simulator extends Scene_Component {
         constructor(context, control_box) {
             // The scene begins by requesting the camera, shapes, and materials it will need.
             super(context, control_box);
@@ -89,16 +89,15 @@ window.Term_Project_Scene = window.classes.Term_Project_Scene =
                 context.register_scene_component(new Movement_Controls(context, control_box.parentElement.insertCell()));
 
             const r = context.width / context.height;
-            context.globals.graphics_state.camera_transform = Mat4.translation([0, 0, -5]);  // Locate the camera here (inverted matrix).
+            context.globals.graphics_state.camera_transform = Mat4.translation([0, -2, -11]);  // Locate the camera here (inverted matrix).
             context.globals.graphics_state.projection_transform = Mat4.perspective(Math.PI / 4, r, .1, 1000);
 
             const shapes = {
-                'box': new Cube(),
-                'strip': new Cube_Single_Strip(),
-                'outline': new Cube_Outline(),
-                'record_player': new Shape_From_File("assets/teapot.obj")
-                
+                'box': new Square(),
+                'record_player': new Shape_From_File("assets/record_player.obj"),
+                'button': new Shape_From_File("assets/cube.obj")
             };
+
             // At the beginning of our program, load one of each of these shape
             // definitions onto the GPU.  NOTE:  Only do this ONCE per shape
             // design.  Once you've told the GPU what the design of a cube is,
@@ -109,15 +108,17 @@ window.Term_Project_Scene = window.classes.Term_Project_Scene =
             this.submit_shapes(context, shapes);
 
             // Make some Material objects available to you:
-            this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
-            this.clay = context.get_instance(Phong_Shader).material(Color.of(.9, .5, .9, 1), {
-                ambient: .4,
-                diffusivity: .4
-            });
-            this.white = context.get_instance(Basic_Shader).material();
-            this.plastic = this.clay.override({specularity: .6});
+            this.materials =
+            {
+                phong_primary: context.get_instance( Phong_Shader ).material( Color.of(.8, .1, .2, 1)),
+                phong_secondary: context.get_instance( Phong_Shader ).material( Color.of(.2, .9, .5, 1)),
+                grey_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/grey_texture.jpg", false )}),
+                gold_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/gold_texture.jpg", false )})
+            }
 
-            this.lights = [new Light(Vec.of(0, 5, 5, 1), Color.of(1, 1, 1, 1), 100000)];
+            this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
+
+            this.lights = [new Light(Vec.of(7, 5, 10, 1), Color.of(1, 1, 1, 1), 100000)];
             
             this.colorList = [];
             this.set_colors();
@@ -125,8 +126,28 @@ window.Term_Project_Scene = window.classes.Term_Project_Scene =
             this.heightScale = 1.5;
             this.widthScale = 1;
 
-            this.sitStill = false;
-            this.outlineMode = false;
+            // MUSIC-RELATED PROPS
+
+            this.music_sound = document.getElementById("music_sound");
+            this.break_sound = document.getElementById("break_sound");
+            this.slide_sound = document.getElementById("slide_sound");
+            this.start_sound = document.getElementById("start_sound");
+            this.shoot_sound = document.getElementById("shoot_sound");
+            this.needl_sound = document.getElementById("needl_sound");
+            this.point_sound = document.getElementById("point_sound");
+            this.break_sound.volume = .5;
+
+            this.isPlaying = false;
+            this.isPlayable = true;
+            this.isFirstPlay = true;
+
+            this.btn_z = 0;
+
+            this.slider_pos = 1;
+
+            // Fixed transforms.
+            this.player_transform = Mat4.scale([2, 2, 2]);
+            this.sliderbox_transform = Mat4.translation([2, -0.48, 3.47]).times(Mat4.scale([0.6, 0.25, 0.25]));
         }
 
         set_colors() {
@@ -141,67 +162,125 @@ window.Term_Project_Scene = window.classes.Term_Project_Scene =
             }
         }
 
-        make_control_panel()             // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        {
-            this.key_triggered_button("Change Colors", ["c"], this.set_colors);    // Add a button for controlling the scene.
-            this.key_triggered_button("Outline", ["o"], () => {
+        // MUSIC-RELATED FUNCTIONS
 
-                // TODO:  Requirement 5b:  Set a flag here that will toggle your outline on and off
-                this.outlineMode = !this.outlineMode;
-            });
-            this.key_triggered_button("Sit still", ["m"], () => {
+        play_music() {
+            this.start_sound.play();
+            this.isPlaying = !this.isPlaying;
+            if (!this.isPlayable) {
+                return;
+            }
+            this.needl_sound.currentTime = 0;
+            this.needl_sound.play();
 
-                // TODO:  Requirement 3d:  Set a flag here that will toggle your swaying motion on and off.
-                this.sitStill = !this.sitStill;
-            });
+            // Will be better to play the music when needle touches disk, not when btn is pressed.
+            if (this.isPlaying) {
+                //setTimeout(() => { this.music_sound.play(); }, 1000);
+                this.music_sound.play();
+            }
+            else {
+                this.music_sound.pause();
+            }
         }
 
-        draw_box(graphics_state, model_transform, index) {
-            // TODO:  Helper function for requirement 3 (see hint).
-            //        This should make changes to the model_transform matrix, draw the next box, and return the newest model_transform.
-            
-            model_transform = model_transform.times(Mat4.scale([this.widthScale, this.heightScale, 1]));
-
-            if(index == 0){
-                this.shapes.strip.draw(graphics_state, model_transform, this.plastic.override({color: this.colorList[index]}), "TRIANGLE_STRIP");
-            }else{
-                if(this.outlineMode){
-                    this.shapes.outline.draw(graphics_state, model_transform, this.white, "LINES");
-                }else{
-                    this.shapes.box.draw(graphics_state, model_transform, this.plastic.override({color: this.colorList[index]}));
-                }   
+        lower_volume() {   
+            if (this.music_sound.volume > .1) {
+                this.slide_sound.play();
+                this.music_sound.volume -= .1;
             }
-            
-            
-            model_transform = model_transform.times(Mat4.scale([1/this.widthScale, 1/this.heightScale, 1]));
-            
-            var rotation = Mat4.identity(); 
-            var trans1 = Mat4.translation([this.widthScale, this.heightScale, 0]);
+            let vol = Math.floor(music_sound.volume * 10) / 10;
+            this.slider_pos = vol;
+            document.getElementById("volume").textContent = "VOLUME: " + vol.toFixed(1);
+        }
 
-            if(!this.sitStill){
-                var w = 2*3*Math.PI;        // angular frequency w = 2πƒ
-                var b = 1;                  // limit the sin function to [0,2]
-                var a = 0.02*Math.PI       // want the maximum angle of rotation to be 0.04*Math.PI
-
-                rotation = Mat4.rotation( a*(Math.sin(w*this.t)+b), Vec.of(0,0,-1));
+        raise_volume() {
+            if (this.music_sound.volume < 1) {
+                this.slide_sound.play();
+                this.music_sound.volume += .1;
             }
+            let vol = Math.floor(music_sound.volume * 10) / 10;
+            this.slider_pos = vol;
+            document.getElementById("volume").textContent = "VOLUME: " + vol.toFixed(1);
+        }
 
-            var trans2 = Mat4.translation([-1 * this.widthScale, this.heightScale, 0]);
-            return model_transform.times(trans1).times(rotation).times(trans2);
+        break_stuff () {
+            this.music_sound.pause();
+            this.isPlaying = false;
+            this.isPlayable = false;
+            this.break_sound.play();
+            this.attached = () => Mat4.translation([0, 4, 20]);
+        }
+
+        make_control_panel()             // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
+        {
+            // A button to control the music.
+            this.key_triggered_button("Play/Pause", ["p"], this.play_music);
+            // this.control_panel.innerHTML += "<br><br>";
+            this.key_triggered_button("-", ["-"], this.lower_volume);
+            const volumeText = document.createElement("span");
+            volumeText.id = "volume";
+            volumeText.textContent = "VOLUME: " + music_sound.volume.toFixed(1);
+            const vol_controls = this.control_panel.appendChild(volumeText);
+            vol_controls.style.margin = "5px";
+            this.key_triggered_button("+", ["="], this.raise_volume);
+            this.key_triggered_button("Smash", ["b"], this.break_stuff);
         }
 
         display(graphics_state) {
             graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
             const t = this.t = graphics_state.animation_time / 1000;
-            let model_transform = Mat4.identity(); 
+
+            if (this.attached !== undefined) {
+                let desired = Mat4.inverse(this.attached().times(Mat4.translation([0, 0, 5])));
+                graphics_state.camera_transform = desired.map((x, i) => Vec.from(graphics_state.camera_transform[i]).mix(x, 0.1));
+            }
+
+            // Button transform when pressed.
+            let btn_transform = Mat4.translation([0, -0.48, 3.45 + this.btn_z]).times(Mat4.scale([0.3, 0.3, 0.3]));
+            if (this.isPlaying === true && this.btn_z > -0.21) {
+                switch(this.btn_z) {
+                    case -.09:
+                        break;
+                    case -.06:
+                        this.btn_z = -.09;
+                        break;
+                    case -.03:
+                        this.btn_z = -.06;
+                        break;
+                    case 0:
+                        this.btn_z = -.03;
+                        break;
+                }
+            }
+            else if (this.isPlaying === false && this.btn_z < 0) {
+                switch(this.btn_z) {
+                    case 0:
+                        break;
+                    case -.03:
+                        this.btn_z = 0;
+                        break;
+                    case -.06:
+                        this.btn_z = -.03;
+                        break;
+                    case -.09:
+                        this.btn_z = -.06;
+                        break;
+                }
+            }
+
+            // Knob transform when volume is adjusted.
+            let slider_transform = Mat4.translation([1.5 + (this.slider_pos), -0.48, 3.45]).times(Mat4.scale([0.075, 0.3, 0.3]));
+
+            // Needle transform when record player is started/stopped.
+
 
             /*
-            // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper
-            for(var i = 0; i < 8; i++){
-                model_transform = this.draw_box(graphics_state, model_transform, i);
-            }*/
+            // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper*/
 
-            this.shapes.record_player.draw(graphics_state, model_transform, this.default);
-            //this.shapes.box.draw(graphics_state, model_transform, this.plastic);
+            this.shapes.box.draw(graphics_state, this.sliderbox_transform, this.materials.grey_texture);
+            this.shapes.button.draw(graphics_state, btn_transform, this.materials.phong_secondary);
+            this.shapes.record_player.draw(graphics_state, this.player_transform, this.materials.phong_primary);
+            this.shapes.button.draw(graphics_state, slider_transform, this.materials.phong_secondary);
+            //this.shapes.box.draw(graphics_state, slider_transform, this.plastic);
         }
     };

@@ -236,6 +236,7 @@ class Shape_From_File extends Shape          // A versatile standalone Shape tha
       this.copy_onto_graphics_card( this.gl );
       this.ready = true;
     }
+
   draw( graphics_state, model_transform, material )       // Cancel all attempts to draw the shape before it loads.
     { if( this.ready ) super.draw( graphics_state, model_transform, material );   }
 }
@@ -602,38 +603,22 @@ window.Movement_Controls = window.classes.Movement_Controls =
         {
             const globals = this.globals;
             this.control_panel.innerHTML += "Click and drag the scene to <br> spin your viewpoint around it.<br>";
-            this.key_triggered_button("Up", [" "], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
             this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = 1, undefined, () => this.thrust[2] = 0);
             this.new_line();
             this.key_triggered_button("Left", ["a"], () => this.thrust[0] = 1, undefined, () => this.thrust[0] = 0);
             this.key_triggered_button("Back", ["s"], () => this.thrust[2] = -1, undefined, () => this.thrust[2] = 0);
             this.key_triggered_button("Right", ["d"], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0);
             this.new_line();
+            this.new_line();
+            this.key_triggered_button("Up", [" "], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
+            this.new_line();
             this.key_triggered_button("Down", ["z"], () => this.thrust[1] = 1, undefined, () => this.thrust[1] = 0);
-
-            const speed_controls = this.control_panel.appendChild(document.createElement("span"));
-            speed_controls.style.margin = "30px";
-            this.key_triggered_button("-", ["o"], () => this.speed_multiplier /= 1.2, "green", undefined, undefined, speed_controls);
-            this.live_string(box => {
-                box.textContent = "Speed: " + this.speed_multiplier.toFixed(2)
-            }, speed_controls);
-            this.key_triggered_button("+", ["p"], () => this.speed_multiplier *= 1.2, "green", undefined, undefined, speed_controls);
-            this.new_line();
-            this.key_triggered_button("Roll left", [","], () => this.roll = 1, undefined, () => this.roll = 0);
-            this.key_triggered_button("Roll right", ["."], () => this.roll = -1, undefined, () => this.roll = 0);
-            this.new_line();
-            this.key_triggered_button("(Un)freeze mouse look around", ["f"], () => this.look_around_locked ^= 1, "green");
             this.new_line();
             this.live_string(box => box.textContent = "Position: " + this.pos[0].toFixed(2) + ", " + this.pos[1].toFixed(2)
                 + ", " + this.pos[2].toFixed(2));
             this.new_line();        // The facing directions are actually affected by the left hand rule:
             this.live_string(box => box.textContent = "Facing: " + ((this.z_axis[0] > 0 ? "West " : "East ")
                 + (this.z_axis[1] > 0 ? "Down " : "Up ") + (this.z_axis[2] > 0 ? "North" : "South")));
-            this.new_line();
-            this.key_triggered_button("Go to world origin", ["r"], () => this.target().set_identity(4, 4), "orange");
-            this.new_line();
-            this.key_triggered_button("Attach to global camera", ["Shift", "R"], () =>
-                globals.movement_controls_target = () => globals.graphics_state.camera_transform, "blue");
             this.new_line();
         }
 

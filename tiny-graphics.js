@@ -502,7 +502,7 @@ class Canvas_Manager      // This class manages a whole graphics program for one
         || w.mozRequestAnimationFrame || w.oRequestAnimationFrame || w.msRequestAnimationFrame
         || function( callback, element ) { w.setTimeout(callback, 1000/60);  } )( window );
     }
-  set_size( dimensions = [ 1080, 600 ] )                // This function allows you to re-size the canvas anytime.  
+  set_size( dimensions = [ 1080, 540 ] )                // This function allows you to re-size the canvas anytime.  
     { const [ width, height ] = dimensions;             // To work, it must change the size in CSS, wait for style to re-flow, 
       this.canvas.style[ "width" ]  =  width + "px";    // and then change the size in canvas attributes.
       this.canvas.style[ "height" ] = height + "px";     
@@ -554,16 +554,14 @@ class Scene_Component       // The Scene_Component superclass is the base class 
                                                         // elements made this way.
       parent.appendChild( Object.assign( document.createElement( "div"  ), { className:"live_string", onload: callback } ) );
     }
-  key_triggered_button( description, shortcut_combination, callback, color = '#'+Math.random().toString(9).slice(-6), 
+  key_triggered_button( description, shortcut_combination, callback, color = "rgb(79, 153, 92)", 
                         release_event, recipient = this, parent = this.control_panel )      // Trigger any scene behavior by assigning a key
     { const button = parent.appendChild( document.createElement( "button" ) );              // shortcut and a labelled HTML button to it.
       button.default_color = button.style.backgroundColor = color;
-      const  press = () => { Object.assign( button.style, { 'background-color' : 'red', 
-                                                            'z-index': "1", 'transform': "scale(2)" } );
+      const press = () => { Object.assign( button.style, { 'z-index': "1", 'transform': "scale(1.1)" } );
                              callback.call( recipient );
                            },
-           release = () => { Object.assign( button.style, { 'background-color' : button.default_color, 
-                                                            'z-index': "0", 'transform': "scale(1)" } );
+           release = () => { Object.assign( button.style, { 'z-index': "0", 'transform': "scale(1)" } );
                              if( !release_event ) return;
                              release_event.call( recipient );
                            };
@@ -619,7 +617,7 @@ class Canvas_Widget                    // Canvas_Widget embeds a WebGL demo onto
       this.canvas_manager = new Canvas_Manager( canvas, Color.of( 0,0,0,1 ) );  // Second parameter sets background color.
 
       for( let scene_class_name of scenes )                  // Register the initially requested scenes to the render loop.
-        this.canvas_manager.register_scene_component( new window[ scene_class_name ]( this.canvas_manager, row.insertCell() ) );   
+        this.canvas_manager.register_scene_component( new window[ scene_class_name ]( this.canvas_manager, row.insertCell() ) );
                            
       this.canvas_manager.render();   // Start WebGL initialization.  Note that render() will re-queue itself for more calls.
     }
