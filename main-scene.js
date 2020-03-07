@@ -54,7 +54,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.game_music = document.getElementById("game_music");
             this.break_sound.volume = .5;
 
-            this.isPlaying = false;
             this.isPlayable = true;
 
             this.btn_z = 0;
@@ -68,6 +67,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.sliderbox_transform = Mat4.translation([2, -0.48, 3.47]).times(Mat4.scale([0.6, 0.25, 0.25]));
 
             // NEEDLE ROTATION.
+            this.needle_vertical_pos = 1;
+            this.needle_locking = false;
             this.needle_rotation_angle = 0;
             this.needle_rotation_locked = true;
             this.needle_rotation_speed = .05;
@@ -85,7 +86,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         // MUSIC-RELATED FUNCTIONS
 
         play_music() {
-            if (!this.isPlaying || !this.record_spinning || !this.needle_rotation_locked) {
+            if (!this.record_spinning || !this.needle_rotation_locked) {
                 this.music_sound.pause();
                 this.music_sound_two.pause();
             }
@@ -104,7 +105,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         spin_disk() {
             this.start_sound.play();
             this.record_spinning = !this.record_spinning;
-            this.isPlaying = !this.isPlaying;
             if (!this.isPlayable) {
                 return;
             }
@@ -136,14 +136,14 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 return;
             }
             this.music_sound.pause();
-            this.isPlaying = false;
+            this.record_spinning = false;
             this.isPlayable = false;
             this.break_sound.play();
             this.attached = () => Mat4.translation([0, 4, 20]);
             this.broken = true;
         }
 
-        needle_rotation_lock(){
+        needle_rotation_lock() {
             this.needle_rotation_locked = !this.needle_rotation_locked;
             this.start_sound.play();
             if(this.needle_rotation_locked){
@@ -154,7 +154,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.play_music();
         }
 
-        needle_rotate_left(){
+        needle_rotate_left() {
             if(!this.needle_rotation_locked) {
                 this.needl_sound.currentTime = 0;
                 this.needl_sound.play();
@@ -163,7 +163,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             }
         }
 
-        needle_rotate_right(){
+        needle_rotate_right() {
             if(!this.needle_rotation_locked) {
                 this.needl_sound.currentTime = 0;
                 this.needl_sound.play();
@@ -214,7 +214,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             // Button transform when pressed.
             let btn_transform = Mat4.translation([0, -0.48, 3.45 + this.btn_z]).times(Mat4.scale([0.3, 0.3, 0.3]));
-            if (this.isPlaying === true && this.btn_z > -0.09) {
+            if (this.record_spinning === true && this.btn_z > -0.09) {
                 switch(this.btn_z) {
                     case -.09:
                         break;
@@ -229,7 +229,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                         break;
                 }
             }
-            else if (this.isPlaying === false && this.btn_z < 0) {
+            else if (this.record_spinning === false && this.btn_z < 0) {
                 switch(this.btn_z) {
                     case 0:
                         break;
@@ -257,7 +257,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     if (this.needle_rotation_angle >= this.song_angle) {
                         this.needle_rotation_angle = this.song_angle;
                         this.needle_left = false;
-                        this.play_music();
                     }
                 }
                 else if ((this.needle_rotation_angle + this.needle_rotation_speed) <= this.song_angle_two) {
@@ -265,7 +264,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     if (this.needle_rotation_angle >= this.song_angle_two) {
                         this.needle_rotation_angle = this.song_angle_two;
                         this.needle_left = false;
-                        this.play_music();
                     }
                 }
             }
