@@ -87,16 +87,24 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
         play_music() {
             if (!this.record_spinning || !this.needle_rotation_locked) {
-                this.music_sound.pause();
-                this.music_sound_two.pause();
+                if (!this.music_sound.paused) {
+                    this.music_sound.pause();
+                }
+                if (!this.music_sound_two.paused) {
+                    this.music_sound_two.pause();
+                }
             }
             else {
                 if (this.needle_rotation_angle === this.song_angle) {
-                    this.music_sound_two.pause();
+                    if (!this.music_sound_two.paused) {
+                        this.music_sound_two.pause();
+                    }
                     this.music_sound.play();
                 }
                 if (this.needle_rotation_angle === this.song_angle_two) {
-                    this.music_sound.pause();
+                    if (!this.music_sound.paused) {
+                        this.music_sound.pause();
+                    }
                     this.music_sound_two.play();
                 }
             }
@@ -135,7 +143,12 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             if (this.broken === true) {
                 return;
             }
-            this.music_sound.pause();
+            if (!this.music_sound.paused) {
+                this.music_sound.pause();
+            }
+            if (!this.music_sound_two.paused) {
+                this.music_sound_two.pause();
+            }
             this.record_spinning = false;
             this.isPlayable = false;
             this.break_sound.play();
