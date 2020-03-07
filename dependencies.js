@@ -938,3 +938,118 @@ window.Movement_Controls = window.classes.Movement_Controls =
         }
     };
 
+window.Body = window.classes.Body =
+    class Body
+    {                                   // **Body** can store and update the properties of a 3D body that incrementally
+                                        // moves from its previous place due to velocities.  It conforms to the
+                                        // approach outlined in the "Fix Your Timestep!" blog post by Glenn Fiedler.
+      constructor( shape, material, size, moveable, aabb )
+        { Object.assign( this, 
+                 { shape, material, size, moveable, aabb } )
+        }
+      emplace( location_matrix, linear_velocity, angular_velocity, spin_axis = Vec.of( 0,0,0 ).randomized(1).normalized() )
+        {                               // emplace(): assign the body's initial values, or overwrite them.
+          this.center   = location_matrix.times( Vec.of( 0,0,0,1 ) ).to3();
+          this.rotation = Mat4.translation( this.center.times( -1 ) ).times( location_matrix );
+          this.previous = { center: this.center.copy(), rotation: this.rotation.copy() };
+                                                  // drawn_location gets replaced with an interpolated quantity:
+          this.drawn_location = location_matrix;
+          this.temp_matrix = Mat4.identity();
+          return Object.assign( this, { linear_velocity, angular_velocity, spin_axis } )
+        }
+      advance( time_amount ) 
+        {                           // advance(): Perform an integration (the simplistic Forward Euler method) to
+                                    // advance all the linear and angular velocities one time-step forward.
+          this.previous = { center: this.center.copy(), rotation: this.rotation.copy() };
+                                                     // Apply the velocities scaled proportionally to real time (time_amount):
+                                                     // Linear velocity first, then angular:
+          this.center = this.center.plus( this.linear_velocity.times( time_amount ) );
+          this.rotation.pre_multiply( Mat4.rotation( time_amount * this.angular_velocity, this.spin_axis ) );
+        }
+      blend_rotation( alpha )         
+        {                        // blend_rotation(): Just naively do a linear blend of the rotations, which looks
+                                 // ok sometimes but otherwise produces shear matrices, a wrong result.
+           return this.rotation.map( (x,i) => Vec.of( ...this.previous.rotation[i] ).mix( x, alpha ) );
+        }
+      blend_state( alpha )            
+        {                             // blend_state(): Compute the final matrix we'll draw using the previous two physical
+                                      // locations the object occupied.  We'll interpolate between these two states as 
+                                      // described at the end of the "Fix Your Timestep!" blog post.
+          this.drawn_location = Mat4.translation( this.previous.center.mix( this.center, alpha ) )
+                                          .times( this.blend_rotation( alpha ) )
+                                          .times( Mat4.scale( this.size ) );
+        }
+      check_if_colliding( b )
+        {                                     
+          if ( this == b ) 
+            return false;                     // Nothing collides with itself.
+                                              // Convert b coordinates to the frame of a
+          const T = this.inverse.times( b.drawn_location, this.temp_matrix );
+                                              // Shift the axis aligned bounding boxes from frame b to a
+          let min_aabb = T.times( b.aabb[0].to4(1) ).to3();
+          let max_aabb = T.times( b.aabb[1].to4(1) ).to3();
+                                              // Check for intersections on the three axes          
+          if ( this.aabb[1][0] < min_aabb[0] || this.aabb[0][0] > max_aabb[0] ) return false; 
+          if ( this.aabb[1][1] < min_aabb[1] || this.aabb[0][1] > max_aabb[1] ) return false; 
+          if ( this.aabb[1][2] < min_aabb[2] || this.aabb[0][2] > max_aabb[2] ) return false; 
+
+          return true;
+        }
+    };
+
+window.Simulation = window.classes.Simulation = 
+    class Simulation extends Scene_Component
+    {                                         // **Simulation** manages the stepping of simulation time.  Subclass it when making
+                                              // a Scene that is a physics demo.  This technique is careful to totally decouple
+                                              // the simulation from the frame rate (see below).
+      constructor(context, control_box)
+        { super(context, control_box);
+          Object.assign( this, { time_accumulator: 0, time_scale: 1, t: 0, dt: 1/20, bodies: [], steps_taken: 0 } );            
+        }
+      simulate( frame_time )
+        {                                     // simulate(): Carefully advance time according to Glenn Fiedler's 
+                                              // "Fix Your Timestep" blog post.
+                                              // This line gives ourselves a way to trick the simulator into thinking
+                                              // that the display framerate is running fast or slow:
+          frame_time = this.time_scale * frame_time;
+
+                                              // Avoid the spiral of death; limit the amount of time we will spend 
+                                              // computing during this timestep if display lags:
+          this.time_accumulator += Math.min( frame_time, 0.1 );
+                                              // Repeatedly step the simulation until we're caught up with this frame:
+          while ( Math.abs( this.time_accumulator ) >= this.dt )
+          {                                                       // Single step of the simulation for all bodies:
+            this.update_state( this.dt );
+            for( let b of this.bodies )
+              b.advance( this.dt );
+                                              // Following the advice of the article, de-couple 
+                                              // our simulation time from our frame rate:
+            this.t                += Math.sign( frame_time ) * this.dt;
+            this.time_accumulator -= Math.sign( frame_time ) * this.dt;
+            this.steps_taken++;
+          }
+                                                // Store an interpolation factor for how close our frame fell in between
+                                                // the two latest simulation time steps, so we can correctly blend the
+                                                // two latest states and display the result.
+          let alpha = this.time_accumulator / this.dt;
+          for( let b of this.bodies ) b.blend_state( alpha );
+        }
+      make_control_panel()
+        {                       // make_control_panel(): Create the buttons for interacting with simulation time.
+          this.key_triggered_button( "Speed up time", [ "Shift","T" ], () => this.time_scale *= 5           );
+          this.key_triggered_button( "Slow down time",        [ "t" ], () => this.time_scale /= 5           ); this.new_line();
+          this.live_string( box => { box.textContent = "Time scale: "  + this.time_scale                  } ); this.new_line();
+          this.live_string( box => { box.textContent = "Fixed simulation time step size: "  + this.dt     } ); this.new_line();
+          this.live_string( box => { box.textContent = this.steps_taken + " timesteps were taken so far." } );
+        }
+      display( program_state )
+        {                                     // display(): advance the time and state of our whole simulation.
+          if( true ) 
+            this.simulate( program_state.animation_delta_time );
+                                              // Draw each shape at its current location:
+          for( let b of this.bodies )
+            b.shape.draw( program_state, b.drawn_location, b.material );
+        }
+      update_state( dt )      // update_state(): Your subclass of Simulation has to override this abstract function.
+        { throw "Override this" }
+    };
