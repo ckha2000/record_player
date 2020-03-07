@@ -71,9 +71,9 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.needle_locking = false;
             this.needle_rotation_angle = 0;
             this.needle_rotation_locked = true;
-            this.needle_rotation_speed = .05;
-            this.song_angle = 0.3;
-            this.song_angle_two = 0.6;
+            this.needle_rotation_speed = 1;
+            this.song_angle = 5;
+            this.song_angle_two = 10;
             this.needle_left = false;
             this.needle_right = false;
 
@@ -312,7 +312,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     }
                 }
             }
-            let needle_rotation = Mat4.rotation(this.needle_rotation_angle, Vec.of(0,-1,0));
+            let needle_rotation = Mat4.rotation(this.needle_rotation_angle * .05, Vec.of(0,-1,0));
 
             let needle_transform = needle_position.times(needle_rotation.times(needle_scale));
 
@@ -322,7 +322,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             if(this.record_spinning) {
                 disk_rotation = disk_rotation.times(Mat4.rotation(this.record_rotation_angle, Vec.of(0,1,Math.random() / 150.)));
-                this.record_rotation_angle += this.record_rotation_speed*2*Math.PI * dt;
+                this.record_rotation_angle += (this.record_rotation_speed)*2*Math.PI * dt;
             }
 
             let disk_transform = disk_position.times(disk_rotation.times(disk_scale));
