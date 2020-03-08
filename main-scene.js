@@ -62,8 +62,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.point_sound = document.getElementById("point_sound");
             this.break_sound.volume = .5;
 
-            this.isPlayable = true;
-
             this.btn_z = 0;
 
             this.slider_pos = 1;
@@ -113,7 +111,17 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         // MUSIC-RELATED FUNCTIONS
 
         play_music() {
-            if (!this.record_spinning || !this.needle_rotation_locked) {
+            if (this.broken && this.record_spinning) {
+                this.music.src = this.boss_music_path;
+                this.music.play();
+            }
+            else if (this.broken && !this.record_spinning) {
+                this.music.pause();
+                this.music.currentTime = 0;
+                this.music.src = "";
+                return;
+            }
+            else if (!this.record_spinning || !this.needle_rotation_locked) {
                 this.music.pause();
                 this.music.currentTime = 0;
                 this.music.src = "";
@@ -135,9 +143,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         spin_disk() {
             this.start_sound.play();
             this.record_spinning = !this.record_spinning;
-            if (!this.isPlayable) {
-                return;
-            }
             this.play_music();
         }
 
@@ -176,7 +181,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.music.play();
 
             this.record_spinning = false;
-            this.isPlayable = false;
             this.break_sound.play();
 
             this.attached = () => this.tank_transform.times(Mat4.translation([0, 20, -20]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0.25))));
@@ -477,6 +481,12 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     this.needle_y -= 0.025;
                     if (this.needle_y + this.needle_vertical_pos <= 0.1) {
                         this.needle_falling = false;
+                        this.music.pause();
+                        this.music.currentTime = 0;
+                        this.music.src = "";
+                        this.music.src = this.boss_music_path;
+                        this.music.play();
+                        this.music.loop = true;
                     }
                 }
             }
