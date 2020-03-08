@@ -173,13 +173,13 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.key_triggered_button("SHOOT", [" "], this.shoot);
             this.new_line();
             this.new_line();
-            this.key_triggered_button("W", ["w"], () => this.moving_forward = true, () => this.moving_forward = false);
+            this.key_triggered_button("W", ["w"], () => this.moving_forward = true, undefined, () => this.moving_forward = false);
             this.new_line();
-            this.key_triggered_button("A", ["a"], () => this.moving_left = true, () => this.moving_left = false);
-            this.key_triggered_button("S", ["s"], () => this.moving_back = true, () => this.moving_back = false);
-            this.key_triggered_button("D", ["d"], () => this.moving_right = true, () => this.moving_right = false);
+            this.key_triggered_button("A", ["a"], () => this.moving_left = true, undefined, () => this.moving_left = false);
+            this.key_triggered_button("S", ["s"], () => this.moving_back = true, undefined, () => this.moving_back = false);
+            this.key_triggered_button("D", ["d"], () => this.moving_right = true, undefined, () => this.moving_right = false);
 
-            this.step_size = 0.2;
+            this.step_size = .1;
             this.moving_forward = false;
             this.moving_left = false;
             this.moving_back = false;
@@ -397,8 +397,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 this.tank_transform = this.tank_transform.times(Mat4.translation([-this.step_size, 0, 0]));
             }
 
-            /*
-            // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper*/
+            /* Draws scene. */
 
             this.shapes.box.draw(graphics_state, this.tank_transform.times(this.sliderbox_transform), this.materials.grey_texture);
             this.shapes.button.draw(graphics_state, this.tank_transform.times(btn_transform), this.materials.phong_secondary);
