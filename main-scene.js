@@ -67,6 +67,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             // game started?
             this.broken = false;
 
+            this.tank_transform = Mat4.identity();
+
             // Fixed transforms.
             this.player_transform = Mat4.scale([2, 2, 2]);
             this.sliderbox_transform = Mat4.translation([2, -0.48, 3.47]).times(Mat4.scale([0.6, 0.25, 0.25]));
@@ -157,7 +159,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.isPlayable = false;
             this.break_sound.play();
 
-            this.attached = () => Mat4.translation([0, 4, -20]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0)));
+            this.attached = () => this.tank_transform.times(Mat4.translation([0, 4, -20]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0))));
             this.lights = [new Light(Vec.of(-8, 7, -10, 1), Color.of(1, 1, 1, 1), 100000)];
             this.broken = true;
 
@@ -171,11 +173,17 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.key_triggered_button("SHOOT", [" "], this.shoot);
             this.new_line();
             this.new_line();
-            this.key_triggered_button("W", ["w"], this.move_forward);
+            this.key_triggered_button("W", ["w"], () => this.moving_forward = true, () => this.moving_forward = false);
             this.new_line();
-            this.key_triggered_button("A", ["a"], this.move_left);
-            this.key_triggered_button("S", ["s"], this.move_back);
-            this.key_triggered_button("D", ["d"], this.move_right);
+            this.key_triggered_button("A", ["a"], () => this.moving_left = true, () => this.moving_left = false);
+            this.key_triggered_button("S", ["s"], () => this.moving_back = true, () => this.moving_back = false);
+            this.key_triggered_button("D", ["d"], () => this.moving_right = true, () => this.moving_right = false);
+
+            this.step_size = 0.2;
+            this.moving_forward = false;
+            this.moving_left = false;
+            this.moving_back = false;
+            this.moving_right = false;
         }
 
         hide_button(id, remove) {
@@ -253,30 +261,28 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         }
 
         update_state(dt) {
-                // INSERT CODE FOR PHYICS AND COLLISION
+            // INSERT CODE FOR PHYICS AND COLLISION
             for( let a of this.bodies )
             {                                                 // Cache the inverse of matrix of body "a" to save time.
               
-                  a.inverse = Mat4.inverse( a.drawn_location );
+                a.inverse = Mat4.inverse( a.drawn_location );
 
-                  if (a.moveable)
+                if (a.moveable)
                     a.linear_velocity[1] += dt * -9.8;
 
-                  if( a.linear_velocity.norm() == 0 )
+                if( a.linear_velocity.norm() == 0 )
                     continue;
                                                               // *** Collision process is here ***
                                                               // Loop through all bodies again (call each "b"):
-                  for( let b of this.bodies )                                      
-                  {                               // Pass the two bodies and the collision shape to check_if_colliding():
+                for( let b of this.bodies )                                      
+                {                                   // Pass the two bodies and the collision shape to check_if_colliding():
                     if( !a.check_if_colliding( b ) )
                       continue;
 
-                                                  // If we get here, we collided
+                                                    // If we get here, we collided
                     if( a.linear_velocity[1] < 0 )
                         a.linear_velocity = Vec.of(Math.random(), a.linear_velocity[1] * -0.8, Math.random());
-                                                 
-
-                  }
+                }
             }    
         }
 
@@ -377,14 +383,28 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             let disk_transform = disk_position.times(disk_rotation.times(disk_scale));
 
+            // Movement translations.
+            if (this.moving_forward) {
+                this.tank_transform = this.tank_transform.times(Mat4.translation([0, 0, this.step_size]));
+            }
+            if (this.moving_left) {
+                this.tank_transform = this.tank_transform.times(Mat4.translation([this.step_size, 0, 0]));
+            }
+            if (this.moving_back) {
+                this.tank_transform = this.tank_transform.times(Mat4.translation([0, 0, -this.step_size]));
+            }
+            if (this.moving_right) {
+                this.tank_transform = this.tank_transform.times(Mat4.translation([-this.step_size, 0, 0]));
+            }
+
             /*
             // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper*/
 
-            this.shapes.box.draw(graphics_state, this.sliderbox_transform, this.materials.grey_texture);
-            this.shapes.button.draw(graphics_state, btn_transform, this.materials.phong_secondary);
-            this.shapes.record_player.draw(graphics_state, this.player_transform, this.materials.phong_primary);
-            this.shapes.button.draw(graphics_state, slider_transform, this.materials.phong_secondary);
-            this.shapes.needle.draw(graphics_state, needle_transform, this.materials.phong_secondary);
-            this.shapes.disk.draw(graphics_state, disk_transform, this.materials.record_texture);
+            this.shapes.box.draw(graphics_state, this.tank_transform.times(this.sliderbox_transform), this.materials.grey_texture);
+            this.shapes.button.draw(graphics_state, this.tank_transform.times(btn_transform), this.materials.phong_secondary);
+            this.shapes.record_player.draw(graphics_state, this.tank_transform.times(this.player_transform), this.materials.phong_primary);
+            this.shapes.button.draw(graphics_state, this.tank_transform.times(slider_transform), this.materials.phong_secondary);
+            this.shapes.needle.draw(graphics_state, this.tank_transform.times(needle_transform), this.materials.phong_secondary);
+            this.shapes.disk.draw(graphics_state, this.tank_transform.times(disk_transform), this.materials.record_texture);
         }
     };
