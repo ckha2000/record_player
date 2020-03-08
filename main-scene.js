@@ -42,6 +42,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 record_texture: context.get_instance( Phong_Shader ).material( Color.of(0.15,0.15,0.15,1) , {specularity: 1.}),
                 record_temp: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_test.jpg", false)}),
                 record_tex: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_tex.jpg", false)}),
+                clear: context.get_instance( Phong_Shader ).material( Color.of(0, 0, 0, 0) ),
             }
 
             this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
@@ -87,11 +88,11 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.broken = false;
 
             this.tank_transform = Mat4.identity();
+            this.aim_transform = this.tank_transform.times(Mat4.translation(Vec.of(0, 1, 10)));
 
             // Fixed transforms.
             this.player_transform = Mat4.scale([2, 2, 2]);
             this.sliderbox_transform = Mat4.translation([2, -0.48, 3.47]).times(Mat4.scale([0.6, 0.25, 0.25]));
-            this.aim_transform = this.player_transform.times(Mat4.translation(Vec.of(0, 0.5, 3))).times(Mat4.scale(Vec.of(0.1, 0.1, 0.1)));
 
             // NEEDLE ROTATION.
             this.needle_vertical_pos = 0.2;
@@ -275,9 +276,9 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
         // SHOOTS A THING
         shoot_item() {
-            let direction = Vec.of(this.aim_transform[0][3] - this.player_transform[0][3],
-                                   this.aim_transform[1][3] - this.player_transform[1][3],
-                                   this.aim_transform[2][3] - this.player_transform[2][3]);
+            let direction = Vec.of(this.aim_transform[0][3] - this.tank_transform[0][3],
+                                   this.aim_transform[1][3] - this.tank_transform[1][3],
+                                   this.aim_transform[2][3] - this.tank_transform[2][3]);
             
             let norm_dir = direction.normalized();
             let x_rot = Math.atan(norm_dir[1] / norm_dir[2]);
@@ -287,8 +288,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                                                    .times(Mat4.rotation(-x_rot, Vec.of(1, 0, 0)));
 
 
-            this.bodies.push(new Projectile(this.shapes.cube, this.materials.phong_primary, Vec.of(1,1,3), false, this.aabb.cube)
-                       .emplace(proj_transform, norm_dir.times(4), 1, Vec.of(proj_transform[0][2], proj_transform[1][2], proj_transform[2][2])));
+            this.bodies.push(new Projectile(this.shapes.cube, this.materials.phong_primary, Vec.of(0.1,0.1,0.3), false, this.aabb.cube)
+                       .emplace(proj_transform, norm_dir.times(4), 0));
         }
 
         make_control_panel()             // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
@@ -319,17 +320,12 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.key_triggered_button("Rotate Left", ["n"], this.needle_rotate_left);
             this.key_triggered_button("Rotate Right", ["m"], this.needle_rotate_right);
             this.key_triggered_button("(Un)lock Rotation", ["r"], this.needle_rotation_lock);
-
-            // BUTTON TO SHOOT
-            this.key_triggered_button("Shoot", ["q"], this.shoot_item)
         }
 
         update_state(dt) {
 
             for( let a of this.bodies )
-            {                                                 // Cache the inverse of matrix of body "a" to save time.
-                  a.inverse = Mat4.inverse( a.drawn_location );
-
+            {
                 if (a.moveable)
                     a.linear_velocity[1] += dt * -9.8;
 
@@ -341,13 +337,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 {                                   // Pass the two bodies and the collision shape to check_if_colliding():
                     if( !a.check_if_colliding( b ) )
                       continue;
-                    console.log(b);
-
                                                   // If we get here, we collided
                     //if( a.linear_velocity[1] < 0 )
                         //a.linear_velocity = Vec.of(Math.random(), a.linear_velocity[1] * -0.8, Math.random());
-                    //a.perform_action( b );
-                    a.linear_velocity = Vec.of(0, 0, 0);
+                    a.perform_action( b );
                 }
             }    
         }
@@ -472,7 +465,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             if (this.moving_right) {
                 this.tank_transform = this.tank_transform.times(Mat4.translation([-this.step_size, 0, 0]));
             }
-            
+
             // Transitioning animation.
             if (this.game_transitioning) {
                 this.needle_right = true;
@@ -532,6 +525,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             let game_disk_transform = Mat4.translation([0,this.disk_fall_pos,0]).times(disk_transform);
 
+
+
             /* Draws scene. */
 
             this.shapes.box.draw(graphics_state, this.tank_transform.times(this.sliderbox_transform), this.materials.grey_texture);
@@ -550,6 +545,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 this.shapes.disk.draw(graphics_state, this.tank_transform.times(game_disk_transform), this.materials.record_tex);
             }
 
-            this.shapes.cube.draw(graphics_state, this.aim_transform, this.materials.phong_primary);
+            this.aim_transform = this.tank_transform.times(Mat4.translation(Vec.of(0, 1, 10)));
+
+            this.shapes.cube.draw(graphics_state, this.aim_transform, this.materials.clear);
         }
     };

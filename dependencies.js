@@ -988,16 +988,16 @@ window.Body = window.classes.Body =
           if ( this == b ) 
             return false;                     // Nothing collides with itself.
                                               // Convert b coordinates to the frame of a
-          const T = this.inverse.times( b.drawn_location, this.temp_matrix );
                                               // Shift the axis aligned bounding boxes from frame b to a
-          let min_aabb = T.times( b.aabb[0].to4(1) ).to3();
-          let max_aabb = T.times( b.aabb[1].to4(1) ).to3();
-          console.log(min_aabb);
-          console.log(max_aabb);
+          let b_min_aabb = b.drawn_location.times( b.aabb[0].to4(1) ).to3();
+          let b_max_aabb = b.drawn_location.times( b.aabb[1].to4(1) ).to3();
+          
+          let a_min_aabb = this.drawn_location.times( this.aabb[0].to4(1) ).to3();
+          let a_max_aabb = this.drawn_location.times( this.aabb[1].to4(1) ).to3();
                                               // Check for intersections on the three axes          
-          if ( this.aabb[1][0] < min_aabb[0] || this.aabb[0][0] > max_aabb[0] ) return false; 
-          if ( this.aabb[1][1] < min_aabb[1] || this.aabb[0][1] > max_aabb[1] ) return false; 
-          if ( this.aabb[1][2] < min_aabb[2] || this.aabb[0][2] > max_aabb[2] ) return false; 
+          if ( a_max_aabb[0] < b_min_aabb[0] || a_min_aabb[0] > b_max_aabb[0] ) return false; 
+          if ( a_max_aabb[1] < b_min_aabb[1] || a_min_aabb[1] > b_max_aabb[1] ) return false; 
+          if ( a_max_aabb[2] < b_min_aabb[2] || a_min_aabb[2] > b_max_aabb[2] ) return false; 
 
           return true;
         }
@@ -1070,11 +1070,25 @@ window.Projectile = window.classes.Projectile =
         constructor( shape, material, size, moveable, aabb )
         { 
             super(shape, material, size, moveable, aabb); 
+            this.cur_collision = undefined;
         }
         perform_action( b )
         {
-            if(b.normal)
-                this.linear_velocity = b.normal.times(2 * this.linear_velocity.dot(b.normal)).minus(this.linear_velocity); 
+            if(b.normal && this.cur_collision != b) {
+                let new_linear_velocity = b.normal.times(-2 * this.linear_velocity.dot(b.normal)).plus(this.linear_velocity);
+    
+                let norm_dir = new_linear_velocity.normalized();
+                let x_rot = Math.atan(norm_dir[1] / norm_dir[2]);
+                let y_rot = Math.atan(norm_dir[0] / norm_dir[2]);
+
+                let proj_transform = Mat4.translation(Vec.of(this.drawn_location[0][3], this.drawn_location[1][3], this.drawn_location[2][3]))
+                                         .times(Mat4.rotation(y_rot, Vec.of(0, 1, 0)))
+                                         .times(Mat4.rotation(-x_rot, Vec.of(1, 0, 0)));
+
+                super.emplace(proj_transform, new_linear_velocity, this.angular_velocity);
+
+                this.cur_collision = b;
+            }
         }
 
     }
