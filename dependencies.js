@@ -325,6 +325,8 @@ class Disk_Frag extends Shape{
         var upVec = Vec.of(0,1,0);
         var downVec = Vec.of(0,-1,0);
 
+        var max_texture_pos = 1/numSections;
+
         // iterate through and store points
         for(var i = 0; i < columns; i++){
             var maxRotation = 2*Math.PI/numSections;
@@ -343,40 +345,51 @@ class Disk_Frag extends Shape{
         for(var i = 0; i < columns; i++){
             this.positions.push(diskOuterTop[i]);
             this.normals.push(upVec);
+            this.texture_coords.push(Vec.of((max_texture_pos/(columns-1)*i),1));
         }
         for(var i = 0; i < columns; i++){
             this.positions.push(diskOuterTop[i]);
             this.normals.push(Vec.of(diskOuterTop[i][0], 0, diskOuterTop[i][2]));
+            this.texture_coords.push(Vec.of((max_texture_pos/(columns-1)*i),0.95));
+            //this.texture_coords.push(Vec.of(1,1));
         }
 
         // outer bot ring
         for(var i = 0; i < columns; i++){
             this.positions.push(diskOuterBot[i]);
             this.normals.push(downVec);
+            this.texture_coords.push(Vec.of((max_texture_pos/(columns-1)*i),1));
         }
         for(var i = 0; i < columns; i++){
             this.positions.push(diskOuterBot[i]);
             this.normals.push(Vec.of(diskOuterBot[i][0], 0, diskOuterBot[i][2]));
+            this.texture_coords.push(Vec.of((max_texture_pos/(columns-1)*i),1));
+            //this.texture_coords.push(Vec.of(1,1));
+
         }
 
         // inner top ring
         for(var i = 0; i < columns; i++){
             this.positions.push(diskInnerTop[i]);
             this.normals.push(upVec);
+            this.texture_coords.push(Vec.of((max_texture_pos/(columns-1)*i),0));
         }
         for(var i = 0; i < columns; i++){
             this.positions.push(diskInnerTop[i]);
             this.normals.push(Vec.of(-1*diskInnerTop[i][0], 0, -1*diskInnerTop[i][2]));
+            this.texture_coords.push(Vec.of((max_texture_pos/(columns-1)*i),0));
         }
 
         // inner bot ring
         for(var i = 0; i < columns; i++){
             this.positions.push(diskInnerBot[i]);
             this.normals.push(downVec);
+            this.texture_coords.push(Vec.of((max_texture_pos/(columns-1)*i),0));
         }
         for(var i = 0; i < columns; i++){
             this.positions.push(diskInnerBot[i]);
             this.normals.push(Vec.of(-1*diskInnerBot[i][0], 0, -1*diskInnerBot[i][2]));
+            this.texture_coords.push(Vec.of((max_texture_pos/(columns-1)*i),0));
         }
 
         // create outer face
@@ -407,6 +420,8 @@ class Disk_Frag extends Shape{
             var startNorm = this.normals[columns].cross(upVec);
             this.positions.push(this.positions[0], this.positions[2*columns], this.positions[4*columns], this.positions[6*columns]);
             this.normals.push(startNorm, startNorm, startNorm, startNorm);
+            this.texture_coords.push(Vec.of(0,1), Vec.of(0,1), Vec.of(0,0), Vec.of(0,0));
+
             this.indices.push(offset1,offset1+1,offset1+2, offset1+1,offset1+2,offset1+3);
 
             offset1 += 4;
@@ -414,6 +429,8 @@ class Disk_Frag extends Shape{
             var endNorm = this.normals[2*columns-1].cross(downVec);
             this.positions.push(this.positions[columns-1], this.positions[3*columns-1], this.positions[5*columns-1], this.positions[7*columns-1]);
             this.normals.push(endNorm, endNorm, endNorm, endNorm);
+            this.texture_coords.push(Vec.of(max_texture_pos,1), Vec.of(max_texture_pos,1), Vec.of(max_texture_pos,0), Vec.of(max_texture_pos,0));
+
             this.indices.push(offset1,offset1+1,offset1+2, offset1+1,offset1+2,offset1+3);
         }
     }

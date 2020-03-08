@@ -12,12 +12,14 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.attached = () => Mat4.translation([0, 1.5, 5]).times(Mat4.rotation(-.1, Vec.of(1,0,0)));
             context.globals.graphics_state.projection_transform = Mat4.perspective(Math.PI / 4, r, .1, 1000);
 
+
             const shapes = {
                 'box': new Square(),
                 'record_player': new Shape_From_File("assets/record_player.obj"),
                 'button': new Shape_From_File("assets/cube.obj"),
                 'needle': new Needle(),
                 'disk': new Disk_Frag(30, 1)
+                
             };
 
             // At the beginning of our program, load one of each of these shape
@@ -37,6 +39,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 grey_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/grey_texture.jpg", false )}),
                 gold_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/gold_texture.jpg", false )}),
                 record_texture: context.get_instance( Phong_Shader ).material( Color.of(0.15,0.15,0.15,1) , {specularity: 1.}),
+                record_temp: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_test.jpg", false)}),
+                record_tex: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_tex.jpg", false)}),
             }
 
             this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
@@ -485,6 +489,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             /* Draws scene. */
 
             this.shapes.box.draw(graphics_state, this.tank_transform.times(this.sliderbox_transform), this.materials.grey_texture);
+            //this.shapes.box.draw(graphics_state, this.tank_transform.times(this.sliderbox_transform), this.materials.record_temp);
+
             this.shapes.button.draw(graphics_state, this.tank_transform.times(btn_transform), this.materials.phong_secondary);
             this.shapes.record_player.draw(graphics_state, this.tank_transform.times(this.player_transform), this.materials.phong_primary);
             this.shapes.button.draw(graphics_state, this.tank_transform.times(slider_transform), this.materials.phong_secondary);
@@ -492,10 +498,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             
             // Decide whether to draw original disk or the game music disk.
             if (!this.broken) {
-                this.shapes.disk.draw(graphics_state, this.tank_transform.times(disk_transform), this.materials.record_texture);
+                this.shapes.disk.draw(graphics_state, this.tank_transform.times(disk_transform), this.materials.record_tex);
             }
             else {
-                this.shapes.disk.draw(graphics_state, this.tank_transform.times(game_disk_transform), this.materials.record_texture);
+                this.shapes.disk.draw(graphics_state, this.tank_transform.times(game_disk_transform), this.materials.record_tex);
             }
         }
     };
