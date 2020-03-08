@@ -175,7 +175,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.isPlayable = false;
             this.break_sound.play();
 
-            this.attached = () => this.tank_transform.times(Mat4.translation([0, 4, -20]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0))));
+            this.attached = () => this.tank_transform.times(Mat4.translation([0, 20, -20]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0.25))));
             this.lights = [new Light(Vec.of(-8, 7, -10, 1), Color.of(1, 1, 1, 1), 100000)];
             this.broken = true;
             this.game_transitioning = true;
@@ -432,7 +432,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             // Transitioning animation.
             if (this.game_transitioning) {
                 this.needle_right = true;
-                
+
                 // Disk falling.
                 this.disk_fall_pos -= this.fall_factor;
                 this.fall_factor *= 0.984;
