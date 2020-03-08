@@ -15,6 +15,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             const shapes = {
                 'box': new Square(),
+                'cube': new Cube(),
                 'record_player': new Shape_From_File("assets/record_player.obj"),
                 'button': new Shape_From_File("assets/cube.obj"),
                 'needle': new Needle(),
@@ -90,6 +91,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             // Fixed transforms.
             this.player_transform = Mat4.scale([2, 2, 2]);
             this.sliderbox_transform = Mat4.translation([2, -0.48, 3.47]).times(Mat4.scale([0.6, 0.25, 0.25]));
+            this.aim_transform = this.player_transform.times(Mat4.translation(Vec.of(0, 0.5, 3))).times(Mat4.scale(Vec.of(0.1, 0.1, 0.1)));
 
             // NEEDLE ROTATION.
             this.needle_vertical_pos = 0.2;
@@ -106,6 +108,22 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.record_spinning = false;
             this.record_rotation_speed = 1;             // rev/sec
             this.record_rotation_angle = 0;
+
+            // PHYSICS RELATED OBJECTS
+            this.aabb = {
+                'cube': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
+                'sphere': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
+            }          
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(1, 0, 0))
+                       .emplace(Mat4.translation(Vec.of(-30, 18, 45)), Vec.of(0, 0, 0), 0));
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(-1, 0, 0))
+                       .emplace(Mat4.translation(Vec.of(30, 18, 45)), Vec.of(0, 0, 0), 0));
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(30, 20, 1), false, this.aabb.cube, Vec.of(0, 0, -1))
+                       .emplace(Mat4.translation(Vec.of(0, 18, 95)), Vec.of(0, 0, 0), 0));
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(30, 1, 50), false, this.aabb.cube, Vec.of(0, 1, 0))
+                       .emplace(Mat4.translation(Vec.of(0, -2, 45)), Vec.of(0, 0, 0), 0));
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(30, 1, 50), false, this.aabb.cube, Vec.of(0, -1, 0))
+                       .emplace(Mat4.translation(Vec.of(0, 38, 45)), Vec.of(0, 0, 0), 0));
         }
 
         // MUSIC-RELATED FUNCTIONS
@@ -196,7 +214,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.hide_button("m", true);
             this.hide_button("r", true);
 
-            this.key_triggered_button("SHOOT", [" "], this.shoot);
+            this.key_triggered_button("SHOOT", [" "], this.shoot_item);
             this.new_line();
             this.new_line();
             this.key_triggered_button("W", ["w"], () => this.moving_forward = true, undefined, () => this.moving_forward = false);
@@ -255,12 +273,25 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             }
         }
 
-        // GAME-RELATED FUNCTIONS
-        shoot() {
+        // SHOOTS A THING
+        shoot_item() {
+            let direction = Vec.of(this.aim_transform[0][3] - this.player_transform[0][3],
+                                   this.aim_transform[1][3] - this.player_transform[1][3],
+                                   this.aim_transform[2][3] - this.player_transform[2][3]);
+            
+            let norm_dir = direction.normalized();
+            let x_rot = Math.atan(norm_dir[1] / norm_dir[2]);
+            let y_rot = Math.atan(norm_dir[0] / norm_dir[2]);
 
+            let proj_transform = this.aim_transform.times(Mat4.rotation(y_rot, Vec.of(0, 1, 0)))
+                                                   .times(Mat4.rotation(-x_rot, Vec.of(1, 0, 0)));
+
+
+            this.bodies.push(new Projectile(this.shapes.cube, this.materials.phong_primary, Vec.of(1,1,3), false, this.aabb.cube)
+                       .emplace(proj_transform, norm_dir.times(4), 1, Vec.of(proj_transform[0][2], proj_transform[1][2], proj_transform[2][2])));
         }
 
-        make_control_panel() // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
+        make_control_panel()             // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         {
             // A button to control the music.
             this.key_triggered_button("Spin Disk", ["p"], this.spin_disk);
@@ -288,14 +319,16 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.key_triggered_button("Rotate Left", ["n"], this.needle_rotate_left);
             this.key_triggered_button("Rotate Right", ["m"], this.needle_rotate_right);
             this.key_triggered_button("(Un)lock Rotation", ["r"], this.needle_rotation_lock);
+
+            // BUTTON TO SHOOT
+            this.key_triggered_button("Shoot", ["q"], this.shoot_item)
         }
 
         update_state(dt) {
-            // INSERT CODE FOR PHYICS AND COLLISION
+
             for( let a of this.bodies )
             {                                                 // Cache the inverse of matrix of body "a" to save time.
-              
-                a.inverse = Mat4.inverse( a.drawn_location );
+                  a.inverse = Mat4.inverse( a.drawn_location );
 
                 if (a.moveable)
                     a.linear_velocity[1] += dt * -9.8;
@@ -308,10 +341,13 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 {                                   // Pass the two bodies and the collision shape to check_if_colliding():
                     if( !a.check_if_colliding( b ) )
                       continue;
+                    console.log(b);
 
-                                                    // If we get here, we collided
-                    if( a.linear_velocity[1] < 0 )
-                        a.linear_velocity = Vec.of(Math.random(), a.linear_velocity[1] * -0.8, Math.random());
+                                                  // If we get here, we collided
+                    //if( a.linear_velocity[1] < 0 )
+                        //a.linear_velocity = Vec.of(Math.random(), a.linear_velocity[1] * -0.8, Math.random());
+                    //a.perform_action( b );
+                    a.linear_velocity = Vec.of(0, 0, 0);
                 }
             }    
         }
@@ -436,7 +472,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             if (this.moving_right) {
                 this.tank_transform = this.tank_transform.times(Mat4.translation([-this.step_size, 0, 0]));
             }
-
+            
             // Transitioning animation.
             if (this.game_transitioning) {
                 this.needle_right = true;
@@ -513,5 +549,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             else {
                 this.shapes.disk.draw(graphics_state, this.tank_transform.times(game_disk_transform), this.materials.record_tex);
             }
+
+            this.shapes.cube.draw(graphics_state, this.aim_transform, this.materials.phong_primary);
         }
     };

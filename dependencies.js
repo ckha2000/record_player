@@ -992,12 +992,18 @@ window.Body = window.classes.Body =
                                               // Shift the axis aligned bounding boxes from frame b to a
           let min_aabb = T.times( b.aabb[0].to4(1) ).to3();
           let max_aabb = T.times( b.aabb[1].to4(1) ).to3();
+          console.log(min_aabb);
+          console.log(max_aabb);
                                               // Check for intersections on the three axes          
           if ( this.aabb[1][0] < min_aabb[0] || this.aabb[0][0] > max_aabb[0] ) return false; 
           if ( this.aabb[1][1] < min_aabb[1] || this.aabb[0][1] > max_aabb[1] ) return false; 
           if ( this.aabb[1][2] < min_aabb[2] || this.aabb[0][2] > max_aabb[2] ) return false; 
 
           return true;
+        }
+      perform_action( b )
+        {
+            throw "Override this";
         }
     };
 
@@ -1057,3 +1063,29 @@ window.Simulation = window.classes.Simulation =
       update_state( dt )      // update_state(): Your subclass of Simulation has to override this abstract function.
         { throw "Override this" }
     };
+
+window.Projectile = window.classes.Projectile = 
+    class Projectile extends Body 
+    {
+        constructor( shape, material, size, moveable, aabb )
+        { 
+            super(shape, material, size, moveable, aabb); 
+        }
+        perform_action( b )
+        {
+            if(b.normal)
+                this.linear_velocity = b.normal.times(2 * this.linear_velocity.dot(b.normal)).minus(this.linear_velocity); 
+        }
+
+    }
+ 
+window.Wall = window.classes.Wall =
+    class Wall extends Body
+    {
+        constructor( shape, material, size, moveable, aabb , normal )
+        {
+            super(shape, material, size, moveable, aabb);
+            this.normal = normal;
+        }
+        perform_action( b ) {}
+    }
