@@ -543,7 +543,7 @@ class Needle extends Shape{
         var arm_transform = Mat4.translation(Vec.of(0,0.7,4)).times(Mat4.rotation(Math.PI/2, Vec.of(1,0,0)).times(Mat4.scale(Vec.of(0.15,8,0.15))));
         Cylinder.insert_transformed_copy_into(this, [15], arm_transform);
 
-        var base_transform = Mat4.translation(Vec.of(0,0.4,0)).times(Mat4.scale(Vec.of(0.6,1.4,0.6)));             // draw the base separately in the scene
+        var base_transform = Mat4.translation(Vec.of(0,0.35,0)).times(Mat4.scale(Vec.of(0.6,1.75,0.6)));             // draw the base separately in the scene
         Cylinder.insert_transformed_copy_into(this, [15], base_transform);
 
         var needle_cylinder_transform = Mat4.translation(Vec.of(0,0.7,8)).times(Mat4.scale(Vec.of(0.4,0.4,0.4)));

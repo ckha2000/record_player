@@ -64,6 +64,22 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             this.slider_pos = 1;
 
+            // game transitioning?
+            this.game_transitioning = false;
+
+            // Transition animation parameters.
+            this.disk_fall_pos = 30;
+            this.fall_factor = 0.49;
+            this.needle_transitioning = false;
+            this.needle_x = 0;
+            this.needle_y = 0;
+            this.needle_z = 0;
+            this.needle_scale_factor = 1.0;
+            this.needle_rising = false;
+            this.needle_translating = false;
+            this.needle_falling = false;
+            this.needle_scaling = false;
+
             // game started?
             this.broken = false;
 
@@ -74,8 +90,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.sliderbox_transform = Mat4.translation([2, -0.48, 3.47]).times(Mat4.scale([0.6, 0.25, 0.25]));
 
             // NEEDLE ROTATION.
-            this.needle_vertical_pos = 1;
-            this.needle_locking = false;
+            this.needle_vertical_pos = 0.2;
+            this.needle_locking = 0;
             this.needle_rotation_angle = 0;
             this.needle_rotation_locked = true;
             this.needle_rotation_speed = 1;
@@ -144,7 +160,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         }
 
         break_stuff () {
-            if (this.broken === true) {
+            if (this.broken) {
                 return;
             }
 
@@ -162,6 +178,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.attached = () => this.tank_transform.times(Mat4.translation([0, 4, -20]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0))));
             this.lights = [new Light(Vec.of(-8, 7, -10, 1), Color.of(1, 1, 1, 1), 100000)];
             this.broken = true;
+            this.game_transitioning = true;
+            this.needle_rising = true;
 
             // change buttons.
             this.hide_button("rotation", true);
@@ -184,10 +202,12 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.moving_left = false;
             this.moving_back = false;
             this.moving_right = false;
+
+            this.record_spinning = true;
         }
 
         hide_button(id, remove) {
-            if (remove === true) {
+            if (remove) {
                 document.getElementById(id).style.display = "none";
             }
             else {
@@ -197,11 +217,13 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         }
 
         needle_rotation_lock() {
-            this.needle_rotation_locked = !this.needle_rotation_locked;
             this.start_sound.play();
-            if (this.needle_rotation_locked){
+            this.needle_rotation_locked = !this.needle_rotation_locked;
+            if (this.needle_rotation_locked) {
+                this.needle_locking = 1;
                 document.getElementById("rotation").textContent = "Needle Rotation: Locked";   
             } else {
+                this.needle_locking = 2;
                 document.getElementById("rotation").textContent = "Needle Rotation: Unlocked";
             }
             this.play_music();
@@ -299,7 +321,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             // Button transform when pressed.
             let btn_transform = Mat4.translation([0, -0.48, 3.45 + this.btn_z]).times(Mat4.scale([0.3, 0.3, 0.3]));
-            if (this.record_spinning === true && this.btn_z > -0.09) {
+            if (this.record_spinning && this.btn_z > -0.09) {
                 switch(this.btn_z) {
                     case -.09:
                         break;
@@ -334,8 +356,20 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             let slider_transform = Mat4.translation([1.5 + (this.slider_pos), -0.48, 3.45]).times(Mat4.scale([0.075, 0.3, 0.3]));
 
             // Needle transform when record player is started/stopped.
-            let needle_position = Mat4.translation(Vec.of(2.8,0.2,-2.8));
-            let needle_scale = Mat4.scale(Vec.of(0.5,0.5,0.5));
+            
+            if (this.needle_locking === 1) {
+                this.needle_vertical_pos -= 0.04;
+                if (this.needle_vertical_pos <= 0.2) {
+                    this.needle_vertical_pos = 0.2;
+                }
+            }
+            if (this.needle_locking === 2) {
+                this.needle_vertical_pos += 0.04;
+                if (this.needle_vertical_pos >= 0.28) {
+                    this.needle_vertical_pos = 0.28;
+                }
+            }
+
             if (this.needle_left) {
                 if ((this.needle_rotation_angle + this.needle_rotation_speed) <= this.song_angle) {
                     this.needle_rotation_angle += this.needle_rotation_speed;
@@ -370,8 +404,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             }
             let needle_rotation = Mat4.rotation(this.needle_rotation_angle * .05, Vec.of(0,-1,0));
 
-            let needle_transform = needle_position.times(needle_rotation.times(needle_scale));
-
             let disk_position = Mat4.translation(Vec.of(0,0.3,0));
             let disk_scale = Mat4.scale(Vec.of(2.8,0.5,2.8));
             let disk_rotation = Mat4.identity();
@@ -397,6 +429,59 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 this.tank_transform = this.tank_transform.times(Mat4.translation([-this.step_size, 0, 0]));
             }
 
+            // Transitioning animation.
+            if (this.game_transitioning) {
+                this.needle_right = true;
+                
+                // Disk falling.
+                this.disk_fall_pos -= this.fall_factor;
+                this.fall_factor *= 0.984;
+                if (this.disk_fall_pos <= 0) {
+                    this.disk_fall_pos = 0;
+                    this.game_transitioning = false;
+                    this.needle_transitioning = true;
+                }
+            }
+            if (this.needle_transitioning) {
+                // Needle moving to center.
+                if (this.needle_rising) {
+                    this.needle_y += 0.06;
+                    if (this.needle_y + this.needle_vertical_pos >= 2) {
+                        this.needle_rising = false;
+                        this.needle_translating = true;
+                    }
+                }
+                if (this.needle_translating) {
+                    this.needle_x -= 0.05;
+                    this.needle_z += 0.05;
+                    if (2.85 + this.needle_x <= 0) {
+                        this.needle_x = -2.85;
+                        this.needle_z = 2.85;
+                        this.needle_translating = false;
+                        this.needle_scaling = true;
+                    }
+                }
+                if (this.needle_scaling) {
+                    this.needle_scale_factor *= 1.02;
+                    if (this.needle_scale_factor >= 2.5) {
+                        this.needle_scale_factor = 2.5;
+                        this.needle_scaling = false;
+                        this.needle_falling = true;
+                    }
+                }
+                if (this.needle_falling) {
+                    this.needle_y -= 0.025;
+                    if (this.needle_y + this.needle_vertical_pos <= 0.1) {
+                        this.needle_falling = false;
+                    }
+                }
+            }
+            let needle_position = Mat4.translation(Vec.of(2.85 + this.needle_x,this.needle_vertical_pos + this.needle_y,-2.85 + this.needle_z));
+            let needle_scale = Mat4.scale(Vec.of(0.5*this.needle_scale_factor,0.5*this.needle_scale_factor,0.5*this.needle_scale_factor));
+            let needle_transform = needle_position.times(needle_rotation.times(needle_scale));
+
+            let game_disk_transform = Mat4.translation([0,this.disk_fall_pos,0]).times(disk_transform);
+
             /* Draws scene. */
 
             this.shapes.box.draw(graphics_state, this.tank_transform.times(this.sliderbox_transform), this.materials.grey_texture);
@@ -404,6 +489,13 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.shapes.record_player.draw(graphics_state, this.tank_transform.times(this.player_transform), this.materials.phong_primary);
             this.shapes.button.draw(graphics_state, this.tank_transform.times(slider_transform), this.materials.phong_secondary);
             this.shapes.needle.draw(graphics_state, this.tank_transform.times(needle_transform), this.materials.phong_secondary);
-            this.shapes.disk.draw(graphics_state, this.tank_transform.times(disk_transform), this.materials.record_texture);
+            
+            // Decide whether to draw original disk or the game music disk.
+            if (!this.broken) {
+                this.shapes.disk.draw(graphics_state, this.tank_transform.times(disk_transform), this.materials.record_texture);
+            }
+            else {
+                this.shapes.disk.draw(graphics_state, this.tank_transform.times(game_disk_transform), this.materials.record_texture);
+            }
         }
     };
