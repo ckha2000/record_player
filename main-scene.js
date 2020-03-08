@@ -43,16 +43,19 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.lights = [new Light(Vec.of(7, 8, 10, 1), Color.of(1, 1, 1, 1), 100000)];
 
             // MUSIC-RELATED PROPS
+            this.music = new Audio();
 
-            this.music_sound = document.getElementById("music_sound");
-            this.music_sound_two = document.getElementById("music_sound_two");
+            this.song1_path = "assets/audio/music.wav";
+            this.song2_path =  "assets/audio/music2.wav";
+            this.transition_path = "assets/audio/transition.wav";
+            this.boss_music_path = "assets/audio/boss_music.wav";
+
             this.break_sound = document.getElementById("break_sound");
             this.slide_sound = document.getElementById("slide_sound");
             this.start_sound = document.getElementById("start_sound");
             this.shoot_sound = document.getElementById("shoot_sound");
             this.needl_sound = document.getElementById("needl_sound");
             this.point_sound = document.getElementById("point_sound");
-            this.game_music = document.getElementById("game_music");
             this.break_sound.volume = .5;
 
             this.isPlayable = true;
@@ -88,24 +91,24 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         // MUSIC-RELATED FUNCTIONS
 
         play_music() {
-            if (!this.music_sound.paused) {
-                this.music_sound.pause();
-            }
-            if (!this.music_sound_two.paused) {
-                this.music_sound_two.pause();
-            }
             if (!this.record_spinning || !this.needle_rotation_locked) {
+                this.music.pause();
+                this.music.currentTime = 0;
+                this.music.src = "";
                 return;
             }
             else {
                 if (this.needle_rotation_angle === this.song_angle) {
-                    this.music_sound.play();
+                    this.music.src = this.song1_path;
+                    this.music.play();
                 }
                 if (this.needle_rotation_angle === this.song_angle_two) {
-                    this.music_sound_two.play();
+                    this.music.src = this.song2_path;
+                    this.music.play();
                 }
             }
         }
+
 
         spin_disk() {
             this.start_sound.play();
@@ -117,23 +120,23 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         }
 
         lower_volume() {   
-            if (this.music_sound.volume > .1) {
+            if (this.music.volume > .1) {
                 this.slide_sound.play();
-                this.music_sound.volume -= .1;
-                this.music_sound_two.volume -= .1;
+                this.music.volume -= .1;
+                this.music.volume -= .1;
             }
-            let vol = Math.floor(music_sound.volume * 10) / 10;
+            let vol = Math.floor(this.music.volume * 10) / 10;
             this.slider_pos = vol;
             document.getElementById("volume").textContent = "VOLUME: " + vol.toFixed(1);
         }
 
         raise_volume() {
-            if (this.music_sound.volume < 1) {
+            if (this.music.volume < 1) {
                 this.slide_sound.play();
-                this.music_sound.volume += .1;
-                this.music_sound_two.volume += .1;
+                this.music.volume += .1;
+                this.music.volume += .1;
             }
-            let vol = Math.floor(music_sound.volume * 10) / 10;
+            let vol = Math.floor(this.music.volume * 10) / 10;
             this.slider_pos = vol;
             document.getElementById("volume").textContent = "VOLUME: " + vol.toFixed(1);
         }
@@ -142,12 +145,14 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             if (this.broken === true) {
                 return;
             }
-            if (!this.music_sound.paused) {
-                this.music_sound.pause();
-            }
-            if (!this.music_sound_two.paused) {
-                this.music_sound_two.pause();
-            }
+
+            this.music.pause();
+            this.music.currentTime = 0;
+            this.music.src = "";
+
+            this.music.src = this.transition_path;
+            this.music.play();
+
             this.record_spinning = false;
             this.isPlayable = false;
             this.break_sound.play();
@@ -226,7 +231,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             const volumeText = document.createElement("span");
             volumeText.id = "volume";
-            volumeText.textContent = "VOLUME: " + music_sound.volume.toFixed(1);
+            volumeText.textContent = "VOLUME: " + this.music.volume.toFixed(1);
             const vol_controls = this.control_panel.appendChild(volumeText);
             vol_controls.style.margin = "5px";
 
