@@ -218,17 +218,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.hide_button("m", true);
             this.hide_button("r", true);
 
-            this.key_triggered_button("SHOOT", [" "], this.shoot_item);
-            this.new_line();
-            this.new_line();
-            this.key_triggered_button("W", ["w"], () => this.moving_forward = true, undefined, () => this.moving_forward = false);
-            this.new_line();
-            this.key_triggered_button("A", ["a"], () => this.moving_left = true, undefined, () => this.moving_left = false);
-            this.key_triggered_button("S", ["s"], () => this.moving_back = true, undefined, () => this.moving_back = false);
-            this.key_triggered_button("D", ["d"], () => this.moving_right = true, undefined, () => this.moving_right = false);
-            this.key_triggered_button("Q", ["q"], () => this.rotating_left = true, undefined, () => this.rotating_left = false);
-            this.key_triggered_button("E", ["e"], () => this.rotating_right = true, undefined, () => this.rotating_right = false);
-
             this.step_size = .1;
             this.moving_forward = false;
             this.moving_left = false;
@@ -238,6 +227,21 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.rotating_right = false;
             
             this.record_spinning = true;
+        }
+
+        add_game_buttons() {
+            this.key_triggered_button("SHOOT", [" "], this.shoot_item);
+            this.new_line();
+            this.new_line();
+            this.key_triggered_button("W", ["w"], () => this.moving_forward = true, undefined, () => this.moving_forward = false);
+            this.new_line();
+            this.key_triggered_button("A", ["a"], () => this.moving_left = true, undefined, () => this.moving_left = false);
+            this.key_triggered_button("S", ["s"], () => this.moving_back = true, undefined, () => this.moving_back = false);
+            this.key_triggered_button("D", ["d"], () => this.moving_right = true, undefined, () => this.moving_right = false);
+            this.new_line();
+            this.new_line();
+            this.key_triggered_button("Aim Left", ["q"], () => this.rotating_left = true, undefined, () => this.rotating_left = false);
+            this.key_triggered_button("Aim Right", ["e"], () => this.rotating_right = true, undefined, () => this.rotating_right = false);
         }
 
         hide_button(id, remove) {
@@ -450,10 +454,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             let disk_position = Mat4.translation(Vec.of(0,0.3,0));
             let disk_scale = Mat4.scale(Vec.of(2.8,0.5,2.8));
-            let disk_rotation = Mat4.identity();
+            let disk_rotation = Mat4.rotation(this.record_rotation_angle, Vec.of(0,1,0));
 
             if(this.record_spinning) {
-                disk_rotation = disk_rotation.times(Mat4.rotation(this.record_rotation_angle, Vec.of(0,1,(Math.random()-0.5) / 120.)));
+                disk_rotation = disk_rotation.times(Mat4.rotation(0.004, Vec.of(0,0,(Math.random()-0.5) / 100.)));
                 this.record_rotation_angle += (this.record_rotation_speed)*2*Math.PI * dt;
             }
 
@@ -516,8 +520,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 }
                 if (this.needle_scaling) {
                     this.needle_scale_factor *= 1.02;
-                    if (this.needle_scale_factor >= 2.5) {
-                        this.needle_scale_factor = 2.5;
+                    if (this.needle_scale_factor >= 2.3) {
+                        this.needle_scale_factor = 2.3;
                         this.needle_scaling = false;
                         this.needle_falling = true;
                     }
@@ -532,6 +536,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                         this.music.src = this.boss_music_path;
                         this.music.play();
                         this.music.loop = true;
+                        this.add_game_buttons();
                     }
                 }
             }
