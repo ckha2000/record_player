@@ -104,6 +104,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.song_angle_two = 10;
             this.needle_left = false;
             this.needle_right = false;
+            this.needle_prev_rot = 0;
 
             // RECORD ROTATION.
             this.record_spinning = false;
@@ -114,6 +115,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.aabb = {
                 'cube': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
                 'sphere': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
+                'disk': [Vec.of(-1, -0.05, -1), Vec.of(1, 0.05, 1)],
             }          
             this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(1, 0, 0))
                        .emplace(Mat4.translation(Vec.of(-30, 18, 45)), Vec.of(0, 0, 0), 0));
@@ -223,13 +225,17 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.key_triggered_button("A", ["a"], () => this.moving_left = true, undefined, () => this.moving_left = false);
             this.key_triggered_button("S", ["s"], () => this.moving_back = true, undefined, () => this.moving_back = false);
             this.key_triggered_button("D", ["d"], () => this.moving_right = true, undefined, () => this.moving_right = false);
+            this.key_triggered_button("Q", ["q"], () => this.rotating_left = true, undefined, () => this.rotating_left = false);
+            this.key_triggered_button("E", ["e"], () => this.rotating_right = true, undefined, () => this.rotating_right = false);
 
             this.step_size = .1;
             this.moving_forward = false;
             this.moving_left = false;
             this.moving_back = false;
             this.moving_right = false;
-
+            this.rotating_left = false;
+            this.rotating_right = false;
+            
             this.record_spinning = true;
         }
 
@@ -277,7 +283,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         // SHOOTS A THING
         shoot_item() {
             let direction = Vec.of(this.aim_transform[0][3] - this.tank_transform[0][3],
-                                   this.aim_transform[1][3] - this.tank_transform[1][3],
+                                   this.aim_transform[1][3] - (this.tank_transform[1][3] + 1),
                                    this.aim_transform[2][3] - this.tank_transform[2][3]);
             
             let norm_dir = direction.normalized();
@@ -288,7 +294,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                                                    .times(Mat4.rotation(-x_rot, Vec.of(1, 0, 0)));
 
 
-            this.bodies.push(new Projectile(this.shapes.cube, this.materials.phong_primary, Vec.of(0.1,0.1,0.3), false, this.aabb.cube)
+            this.bodies.push(new Projectile(this.shapes.disk, this.materials.phong_primary, Vec.of(1, 1, 1), false, this.aabb.disk)
                        .emplace(proj_transform, norm_dir.times(4), 0));
         }
 
@@ -394,20 +400,20 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             // Needle transform when record player is started/stopped.
             
-            if (this.needle_locking === 1) {
+            if (this.needle_locking === 1 && !this.broken) {
                 this.needle_vertical_pos -= 0.04;
                 if (this.needle_vertical_pos <= 0.2) {
                     this.needle_vertical_pos = 0.2;
                 }
             }
-            if (this.needle_locking === 2) {
+            if (this.needle_locking === 2 && !this.broken) {
                 this.needle_vertical_pos += 0.04;
                 if (this.needle_vertical_pos >= 0.28) {
                     this.needle_vertical_pos = 0.28;
                 }
             }
 
-            if (this.needle_left) {
+            if (this.needle_left && !this.broken) {
                 if ((this.needle_rotation_angle + this.needle_rotation_speed) <= this.song_angle) {
                     this.needle_rotation_angle += this.needle_rotation_speed;
                     if (this.needle_rotation_angle >= this.song_angle) {
@@ -423,7 +429,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     }
                 }
             }
-            if (this.needle_right) {
+            if (this.needle_right && !this.broken) {
                 if ((this.needle_rotation_angle - this.needle_rotation_speed) >= this.song_angle) {
                     this.needle_rotation_angle -= this.needle_rotation_speed;
                     if (this.needle_rotation_angle <= this.song_angle) {
@@ -465,6 +471,15 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             if (this.moving_right) {
                 this.tank_transform = this.tank_transform.times(Mat4.translation([-this.step_size, 0, 0]));
             }
+
+            // Rotations for needle
+            if (this.rotating_left) {
+                this.needle_prev_rot += 0.01 * Math.PI;
+            }
+            if (this.rotating_right) {
+                this.needle_prev_rot -= 0.01 * Math.PI;
+            }
+            needle_rotation = Mat4.rotation(this.needle_prev_rot, Vec.of(0, 1, 0));
 
             // Transitioning animation.
             if (this.game_transitioning) {
@@ -545,8 +560,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 this.shapes.disk.draw(graphics_state, this.tank_transform.times(game_disk_transform), this.materials.record_tex);
             }
 
-            this.aim_transform = this.tank_transform.times(Mat4.translation(Vec.of(0, 1, 10)));
-
-            this.shapes.cube.draw(graphics_state, this.aim_transform, this.materials.clear);
+            this.aim_transform = this.tank_transform.times(needle_rotation).times(Mat4.translation(Vec.of(0, 1, 10)));
         }
     };
