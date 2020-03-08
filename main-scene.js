@@ -555,10 +555,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             
             // Decide whether to draw original disk or the game music disk.
             if (!this.broken) {
-                this.shapes.disk.draw(graphics_state, this.tank_transform.times(disk_transform), this.materials.record_tex2);
+                this.shapes.disk.draw(graphics_state, this.tank_transform.times(disk_transform), this.materials.record_tex);
             }
             else {
-                this.shapes.disk.draw(graphics_state, this.tank_transform.times(game_disk_transform), this.materials.record_tex);
+                this.shapes.disk.draw(graphics_state, this.tank_transform.times(game_disk_transform), this.materials.record_tex2);
             }
 
             this.aim_transform = this.tank_transform.times(needle_rotation).times(Mat4.translation(Vec.of(0, 1, 10)));
