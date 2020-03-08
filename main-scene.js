@@ -43,6 +43,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 record_temp: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_test.jpg", false)}),
                 record_tex: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_tex.jpg", false)}),
                 clear: context.get_instance( Phong_Shader ).material( Color.of(0, 0, 0, 0) ),
+                record_tex2: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_tex2.jpg", false)}),
             }
 
             this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
@@ -554,7 +555,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             
             // Decide whether to draw original disk or the game music disk.
             if (!this.broken) {
-                this.shapes.disk.draw(graphics_state, this.tank_transform.times(disk_transform), this.materials.record_tex);
+                this.shapes.disk.draw(graphics_state, this.tank_transform.times(disk_transform), this.materials.record_tex2);
             }
             else {
                 this.shapes.disk.draw(graphics_state, this.tank_transform.times(game_disk_transform), this.materials.record_tex);
