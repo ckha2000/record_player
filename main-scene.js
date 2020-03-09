@@ -49,6 +49,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 ceiling: context.get_instance( Phong_Shader ).material(Color.of(153/255,121/255,82/255,1), {ambient: 0.4, specularity: 0.5}),
                 floor: context.get_instance( Phong_Shader ).material(Color.of(92/255,60/255,45/255,1), {ambient: 0.4, specularity: 0.5}),
                 back_wall_tex: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, specularity: 0.5, texture: context.get_instance("assets/back_wall_tex.jpg", false)}),
+                target: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, specularity: 0.5, texture: context.get_instance("assets/music_note.jpg", false)}),
             }
 
             this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
@@ -337,7 +338,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                         let target_location = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
                         if (!this.target_locations[target_location[0]][target_location[1]])
                         {
-                                this.bodies.push(new Target(this.shapes.cube, this.materials.phong_primary, Vec.of(1, 1, 1), this.aabb.cube)
+                                this.bodies.push(new Target(this.shapes.cube, this.materials.target, Vec.of(1, 1, 1), this.aabb.cube)
                                             .emplace(Mat4.translation([-10 + target_location[0], 10 + target_location[1], 45 + Math.floor(Math.random() * 20)]),
                                             Vec.of(0, 0, 0), 0));
                                 this.target_locations[target_location[0]][target_location[1]] = true;
