@@ -122,6 +122,9 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.record_rotation_angle = 0;
 
             // PHYSICS RELATED OBJECTS
+            this.num_targets = 0;
+            this.target_locations = new Array(20).fill(false).map(() => new Array(20).fill(false));
+            this.spawn_timer = 0;
             this.aabb = {
                 'cube': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
                 'sphere': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
@@ -147,6 +150,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                        .emplace(Mat4.translation(Vec.of(0, -2, 45)), Vec.of(0, 0, 0), 0));
             // ceiling
             this.bodies.push(new Wall(this.shapes.cube, this.materials.ceiling, Vec.of(this.room_width, 1, this.room_length), false, this.aabb.cube, Vec.of(0, -1, 0))
+
                        .emplace(Mat4.translation(Vec.of(0, 38, 45)), Vec.of(0, 0, 0), 0));
         }
 
@@ -245,6 +249,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.rotating_right = false;
             
             this.record_spinning = true;
+
+            this.spawn_targets();
         }
 
         add_game_buttons() {
@@ -322,8 +328,24 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                                                    .times(Mat4.rotation(-x_rot, Vec.of(1, 0, 0)));
 
 
-            this.bodies.push(new Projectile(this.shapes.disk, this.materials.phong_primary, Vec.of(1, 1, 1), false, this.aabb.disk)
+            this.bodies.push(new Projectile(this.shapes.disk, this.materials.record_tex2, Vec.of(1, 1, 1), this.aabb.disk)
                        .emplace(proj_transform, norm_dir.times(4), 0));
+        }
+
+        // MAKES THE TARGETS
+        spawn_targets() {
+                while ( this.num_targets < 20 ) {b
+                        let target_location = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+                        if (!this.target_locations[target_location[0]][target_location[1]])
+                        {
+                                this.bodies.push(new Target(this.shapes.cube, this.materials.phong_primary, Vec.of(1, 1, 1), this.aabb.cube)
+                                            .emplace(Mat4.translation([-10 + target_location[0], 10 + target_location[1], 45 + Math.floor(Math.random() * 20)]),
+                                            Vec.of(0, 0, 0), 0));
+                                this.target_locations[target_location[0]][target_location[1]] = true;
+                                this.num_targets += 1
+                        }
+
+                }
         }
 
         make_control_panel()             // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
@@ -370,13 +392,53 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                                                               // *** Collision process is here ***
                                                               // Loop through all bodies again (call each "b"):
                 for( let b of this.bodies )                                      
-                {                                   // Pass the two bodies and the collision shape to check_if_colliding():
+                {
                     if( !a.check_if_colliding( b ) )
                       continue;
                                                   // If we get here, we collided
                     a.perform_action( b );
+
+                    if (b.breakable && a.breakable) {
+                      this.target_locations[Math.round(b.center[0] + 10)][Math.round(b.center[1]- 10)] = false;
+
+                      this.bodies.push(new Target_Frag(this.shapes.cube, this.materials.phong_primary, Vec.of(0.25, 0.25, 0.25), this.aabb.cube)
+                                 .emplace(b.drawn_location.times(Mat4.translation([0.5, 0.5, 0.5])), Vec.of(0, 0, 1).randomized(3), Math.random()));
+                      this.bodies.push(new Target_Frag(this.shapes.cube, this.materials.phong_primary, Vec.of(0.25, 0.25, 0.25), this.aabb.cube)
+                                 .emplace(b.drawn_location.times(Mat4.translation([-0.5, 0.5, 0.5])), Vec.of(0, 0, 1).randomized(3), Math.random()));
+                      this.bodies.push(new Target_Frag(this.shapes.cube, this.materials.phong_primary, Vec.of(0.25, 0.25, 0.25), this.aabb.cube)
+                                 .emplace(b.drawn_location.times(Mat4.translation([0.5, 0.5, -0.5])), Vec.of(0, 0, 1).randomized(3), Math.random()));
+                      this.bodies.push(new Target_Frag(this.shapes.cube, this.materials.phong_primary, Vec.of(0.25, 0.25, 0.25), this.aabb.cube)
+                                 .emplace(b.drawn_location.times(Mat4.translation([-0.5, 0.5, -0.5])), Vec.of(0, 0, 1).randomized(3), Math.random()));
+                      this.bodies.push(new Target_Frag(this.shapes.cube, this.materials.phong_primary, Vec.of(0.25, 0.25, 0.25), this.aabb.cube)
+                                 .emplace(b.drawn_location.times(Mat4.translation([0.5, -0.5, 0.5])), Vec.of(0, 0, 1).randomized(3), Math.random()));
+                      this.bodies.push(new Target_Frag(this.shapes.cube, this.materials.phong_primary, Vec.of(0.25, 0.25, 0.25), this.aabb.cube)
+                                 .emplace(b.drawn_location.times(Mat4.translation([-0.5, -0.5, 0.5])), Vec.of(0, 0, 1).randomized(3), Math.random()));
+                      this.bodies.push(new Target_Frag(this.shapes.cube, this.materials.phong_primary, Vec.of(0.25, 0.25, 0.25), this.aabb.cube)
+                                 .emplace(b.drawn_location.times(Mat4.translation([0.5, -0.5, -0.5])), Vec.of(0, 0, 1).randomized(3), Math.random()));
+                      this.bodies.push(new Target_Frag(this.shapes.cube, this.materials.phong_primary, Vec.of(0.25, 0.25, 0.25), this.aabb.cube)
+                                 .emplace(b.drawn_location.times(Mat4.translation([-0.5, -0.5, -0.5])), Vec.of(0, 0, 1).randomized(3), Math.random()));
+                      
+                      for (let i = 0; i < 6; i++) {
+                          this.bodies.push(new Frag(this.shapes.disk_frag, this.materials.record_tex2, Vec.of(1, 1, 1), this.aabb.disk)
+                                     .emplace(b.drawn_location.times(Mat4.rotation((i / 6) * 2 * Math.PI, Vec.of(0, 1, 0))), 
+                                     Vec.of(0 , 0, 1).randomized(3), Math.random()));
+                      }          
+                      
+                      this.num_targets -= 1;
+                      this.bodies = this.bodies.filter( o => o != b && o != a);
+                    }
+
+                    if (!a.breakable && !b.breakable && a.linear_velocity.norm() == 0)
+                      this.bodies = this.bodies.filter(o => o != a);
                 }
             }    
+
+            this.spawn_timer += dt;
+
+            if(this.spawn_timer > 50) {
+                    this.spawn_targets();
+                    this.spawn_timer = 0;
+            }
         }
 
         display(graphics_state) {
@@ -528,7 +590,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     if(this.disk_fall_pos < 25 && !this.broken) {
                             let frag_matrix = Mat4.translation([this.tank_transform[0][3], this.tank_transform[1][3] + 0.3, this.tank_transform[2][3]]);
                             for (let i = 0; i < 6; i++) {
-                                this.bodies.push(new Frag(this.shapes.disk_frag, this.materials.record_tex, Vec.of(2.8, 0.5, 2.8), true, this.aabb.disk)
+                                this.bodies.push(new Frag(this.shapes.disk_frag, this.materials.record_tex, Vec.of(2.8, 0.5, 2.8), this.aabb.disk)
                                         .emplace(Mat4.rotation((i / 6) * 2 * Math.PI, Vec.of(0, 1, 0)).times(frag_matrix), 
                                         Vec.of((Math.random() - 0.5) * 2, 1.5, -2).normalized().times(4), Math.random()));
                             }
