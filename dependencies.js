@@ -947,9 +947,9 @@ window.Body = window.classes.Body =
     {                                   // **Body** can store and update the properties of a 3D body that incrementally
                                         // moves from its previous place due to velocities.  It conforms to the
                                         // approach outlined in the "Fix Your Timestep!" blog post by Glenn Fiedler.
-      constructor( shape, material, size, moveable, aabb )
+      constructor( shape, material, size, moveable, aabb, breakable )
         { Object.assign( this, 
-                 { shape, material, size, moveable, aabb } )
+                 { shape, material, size, moveable, aabb, breakable } )
         }
       emplace( location_matrix, linear_velocity, angular_velocity, spin_axis = Vec.of( 0,0,0 ).randomized(1).normalized() )
         {                               // emplace(): assign the body's initial values, or overwrite them.
@@ -1067,9 +1067,9 @@ window.Simulation = window.classes.Simulation =
 window.Projectile = window.classes.Projectile = 
     class Projectile extends Body 
     {
-        constructor( shape, material, size, moveable, aabb )
+        constructor( shape, material, size, aabb )
         { 
-            super(shape, material, size, moveable, aabb); 
+            super(shape, material, size, false, aabb, true); 
             this.cur_collision = undefined;
         }
         perform_action( b )
@@ -1096,9 +1096,9 @@ window.Projectile = window.classes.Projectile =
 window.Wall = window.classes.Wall =
     class Wall extends Body
     {
-        constructor( shape, material, size, moveable, aabb , normal )
+        constructor( shape, material, size, aabb , normal )
         {
-            super(shape, material, size, moveable, aabb);
+            super(shape, material, size, false, aabb, false);
             this.normal = normal;
         }
         perform_action( b ) {}
@@ -1107,19 +1107,37 @@ window.Wall = window.classes.Wall =
 window.Frag = window.classes.Frag = 
     class Frac extends Body
     {
-        constructor( shape, material, size, moveable, aabb)
+        constructor( shape, material, size, aabb)
         {
-            super(shape, material, size, moveable, aabb);
+            super(shape, material, size, true, aabb, false);
         }
-        perform_action( b ) {}
+        perform_action( b )  
+        {
+            if(!b.breakable && b.linear_velocity.norm() == 0 && b.normal)
+                this.linear_velocity = Vec.of(0, 0, 0);
+        }
     }
 
 window.Target = window.classes.Target = 
     class Target extends Body
     {
-        constructor( shape, material, size, moveable, aabb )
+        constructor( shape, material, size, aabb )
         {
-            super(shape, material, size, moveable, aabb);
+            super(shape, material, size, false, aabb, true);
         }
         perform_action( b ) {}
+    }
+
+window.Target_Frag = window.classes.Target_Frag =
+    class Target_Frag extends Body
+    {
+        constructor( shape, material, size, aabb )
+        {
+            super(shape, material, size, true, aabb, false);
+        }
+        perform_action( b ) 
+        {
+            if(!b.breakable && b.linear_velocity.norm() == 0 && b.normal)
+                this.linear_velocity = Vec.of(0, 0, 0);
+        }
     }
