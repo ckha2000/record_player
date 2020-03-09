@@ -19,7 +19,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 'record_player': new Shape_From_File("assets/record_player.obj"),
                 'button': new Shape_From_File("assets/cube.obj"),
                 'needle': new Needle(),
-                'disk': new Disk_Frag(30, 1)
+                'disk': new Disk_Frag(30, 1),
+                'disk_frag': new Disk_Frag(30, 6),
                 
             };
 
@@ -161,7 +162,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             }
         }
 
-
         spin_disk() {
             this.start_sound.play();
             this.record_spinning = !this.record_spinning;
@@ -227,6 +227,11 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.rotating_right = false;
             
             this.record_spinning = true;
+
+            /**for (let i = 0; i < 6; i++) {
+                    this.bodies.push(new Body(this.shapes.disk_frag), this.materials.record_tex, Vec.of(1, 1, 1)
+                               .emplace)
+            }**/
         }
 
         add_game_buttons() {
@@ -349,8 +354,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     if( !a.check_if_colliding( b ) )
                       continue;
                                                   // If we get here, we collided
-                    //if( a.linear_velocity[1] < 0 )
-                        //a.linear_velocity = Vec.of(Math.random(), a.linear_velocity[1] * -0.8, Math.random());
                     a.perform_action( b );
                 }
             }    
@@ -484,8 +487,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             if (this.rotating_right) {
                 this.needle_prev_rot -= 0.01 * Math.PI;
             }
-            needle_rotation = Mat4.rotation(this.needle_prev_rot, Vec.of(0, 1, 0));
-
+            if (this.broken) {
+                needle_rotation = Mat4.rotation(this.needle_prev_rot, Vec.of(0, 1, 0));
+            }
+            
             // Transitioning animation.
             if (this.game_transitioning) {
                 this.needle_right = true;
@@ -545,8 +550,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             let needle_transform = needle_position.times(needle_rotation.times(needle_scale));
 
             let game_disk_transform = Mat4.translation([0,this.disk_fall_pos,0]).times(disk_transform);
-
-
 
             /* Draws scene. */
 
