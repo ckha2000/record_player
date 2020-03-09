@@ -258,6 +258,19 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         add_game_buttons() {
             document.getElementById("p").style.opacity = "1";
             document.getElementById("p").style.cursor = "pointer";
+
+            const scoreText = document.createElement("span");
+            scoreText.id = "score";
+            scoreText.textContent = "SCORE: " + this.points;
+            const shotsText = document.createElement("span");
+            shotsText.id = "shots";
+            shotsText.textContent = "SHOTS REMAINING: " + this.num_shots;
+            this.control_panel.appendChild(scoreText);
+            this.new_line();
+            this.control_panel.appendChild(shotsText);
+
+            this.new_line();
+            this.new_line();
             this.key_triggered_button("SHOOT", [" "], this.shoot_item);
             this.new_line();
             this.new_line();
@@ -315,7 +328,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
         // SHOOTS A THING
         shoot_item() {
-            if (this.num_shots == 0)
+            if (this.num_shots === 0)
                 return;
 
             this.shoot_sound.currentTime = 0;
@@ -337,6 +350,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                        .emplace(proj_transform, norm_dir.times(4), 0));
 
             this.num_shots -= 1;
+            document.getElementById("shots").textContent = "SHOTS REMAINING: " + this.num_shots;
         }
 
         // MAKES THE TARGETS
@@ -429,9 +443,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                           this.bodies.push(new Frag(this.shapes.disk_frag, this.materials.record_tex2, Vec.of(1, 1, 1), this.aabb.disk)
                                      .emplace(b.drawn_location.times(Mat4.rotation((i / 6) * 2 * Math.PI, Vec.of(0, 1, 0))), 
                                      Vec.of(0 , 0, 1).randomized(3), Math.random()));
+                      }
 
                       this.points += 10;
-                      }          
+                      document.getElementById("score").textContent = "SCORE: " + this.points;     
                       
                       this.num_targets -= 1;
                       this.bodies = this.bodies.filter( o => o != b && o != a);
@@ -452,8 +467,11 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.shot_recharge += dt;
 
             if(this.shot_recharge > 8) {
-                    if (this.num_shots < 3)
+                    if (this.num_shots < 3) {
                         this.num_shots += 1;
+                        document.getElementById("shots").textContent = "SHOTS REMAINING: " + this.num_shots;
+                    }
+
                     this.shot_recharge = 0;
             }
         }
