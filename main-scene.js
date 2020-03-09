@@ -36,7 +36,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             // Make some Material objects available to you:
             this.materials =
             {
-                phong_primary: context.get_instance( Phong_Shader ).material( Color.of(.8, .1, .2, 1)),
+                phong_primary: context.get_instance( Phong_Shader ).material( Color.of(.8, .15, .25, 1)),
                 phong_secondary: context.get_instance( Phong_Shader ).material( Color.of(.2, .9, .5, 1)),
                 grey_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/grey_texture.jpg", false )}),
                 gold_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/gold_texture.jpg", false )}),
@@ -46,6 +46,9 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 clear: context.get_instance( Phong_Shader ).material( Color.of(0, 0, 0, 0) ),
                 record_tex2: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_tex2.jpg", false)}),
                 wall_tex: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, specularity: 0.5, texture: context.get_instance("assets/wall_tex.jpg", false)}),
+                ceiling: context.get_instance( Phong_Shader ).material(Color.of(153/255,121/255,82/255,1), {ambient: 0.4, specularity: 0.5}),
+                floor: context.get_instance( Phong_Shader ).material(Color.of(92/255,60/255,45/255,1), {ambient: 0.4, specularity: 0.5}),
+                back_wall_tex: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, specularity: 0.5, texture: context.get_instance("assets/back_wall_tex.jpg", false)}),
             }
 
             this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
@@ -127,13 +130,13 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(-1, 0, 0))
                        .emplace(Mat4.translation(Vec.of(30, 18, 45)), Vec.of(0, 0, 0), 0));
             // back wall
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(30, 20, 1), false, this.aabb.cube, Vec.of(0, 0, -1))
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.back_wall_tex, Vec.of(30, 20, 1), false, this.aabb.cube, Vec.of(0, 0, -1))
                        .emplace(Mat4.translation(Vec.of(0, 18, 95)), Vec.of(0, 0, 0), 0));
             // floor
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(30, 1, 50), false, this.aabb.cube, Vec.of(0, 1, 0))
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.floor, Vec.of(30, 1, 50), false, this.aabb.cube, Vec.of(0, 1, 0))
                        .emplace(Mat4.translation(Vec.of(0, -2, 45)), Vec.of(0, 0, 0), 0));
             // ceiling
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(30, 1, 50), false, this.aabb.cube, Vec.of(0, -1, 0))
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.ceiling, Vec.of(30, 1, 50), false, this.aabb.cube, Vec.of(0, -1, 0))
                        .emplace(Mat4.translation(Vec.of(0, 38, 45)), Vec.of(0, 0, 0), 0));
         }
 
