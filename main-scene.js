@@ -120,17 +120,19 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 'sphere': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
                 'disk': [Vec.of(-1, -0.05, -1), Vec.of(1, 0.05, 1)],
             }
-            // left wall          
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(1, 0, 0))
+            // right wall          
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(1, 0, 0))
                        .emplace(Mat4.translation(Vec.of(-30, 18, 45)), Vec.of(0, 0, 0), 0));
-            // right wall
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(-1, 0, 0))
+            // left wall
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(-1, 0, 0))
                        .emplace(Mat4.translation(Vec.of(30, 18, 45)), Vec.of(0, 0, 0), 0));
-            // 
+            // back wall
             this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(30, 20, 1), false, this.aabb.cube, Vec.of(0, 0, -1))
                        .emplace(Mat4.translation(Vec.of(0, 18, 95)), Vec.of(0, 0, 0), 0));
+            // floor
             this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(30, 1, 50), false, this.aabb.cube, Vec.of(0, 1, 0))
                        .emplace(Mat4.translation(Vec.of(0, -2, 45)), Vec.of(0, 0, 0), 0));
+            // ceiling
             this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(30, 1, 50), false, this.aabb.cube, Vec.of(0, -1, 0))
                        .emplace(Mat4.translation(Vec.of(0, 38, 45)), Vec.of(0, 0, 0), 0));
         }
