@@ -213,6 +213,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             // change buttons.
             this.hide_button("rotation", true);
+            this.hide_button("p", false);
             this.hide_button("b", false);
             this.hide_button("n", true);
             this.hide_button("m", true);
@@ -235,18 +236,20 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
         }
 
         add_game_buttons() {
+            document.getElementById("p").style.opacity = "1";
+            document.getElementById(id).style.cursor = "pointer";
             this.key_triggered_button("SHOOT", [" "], this.shoot_item);
             this.new_line();
             this.new_line();
+            this.key_triggered_button("Aim Left", ["q"], () => this.rotating_left = true, undefined, () => this.rotating_left = false);
             this.key_triggered_button("W", ["w"], () => this.moving_forward = true, undefined, () => this.moving_forward = false);
+            this.key_triggered_button("Aim Right", ["e"], () => this.rotating_right = true, undefined, () => this.rotating_right = false);
             this.new_line();
             this.key_triggered_button("A", ["a"], () => this.moving_left = true, undefined, () => this.moving_left = false);
             this.key_triggered_button("S", ["s"], () => this.moving_back = true, undefined, () => this.moving_back = false);
             this.key_triggered_button("D", ["d"], () => this.moving_right = true, undefined, () => this.moving_right = false);
             this.new_line();
             this.new_line();
-            this.key_triggered_button("Aim Left", ["q"], () => this.rotating_left = true, undefined, () => this.rotating_left = false);
-            this.key_triggered_button("Aim Right", ["e"], () => this.rotating_right = true, undefined, () => this.rotating_right = false);
         }
 
         hide_button(id, remove) {
@@ -292,6 +295,9 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
         // SHOOTS A THING
         shoot_item() {
+            this.shoot_sound.currentTime = 0;
+            this.shoot_sound.play();
+
             let direction = Vec.of(this.aim_transform[0][3] - this.tank_transform[0][3],
                                    this.aim_transform[1][3] - (this.tank_transform[1][3] + 1),
                                    this.aim_transform[2][3] - this.tank_transform[2][3]);
