@@ -137,20 +137,19 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.room_width = 30;  
 
             // right wall   
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, this.room_height, this.room_length), false, this.aabb.cube, Vec.of(1, 0, 0))
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, this.room_height, this.room_length), this.aabb.cube, Vec.of(1, 0, 0))
                        .emplace(Mat4.translation(Vec.of(-30, 18, 45)), Vec.of(0, 0, 0), 0));
             // left wall
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, this.room_height, this.room_length), false, this.aabb.cube, Vec.of(-1, 0, 0))
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, this.room_height, this.room_length), this.aabb.cube, Vec.of(-1, 0, 0))
                        .emplace(Mat4.translation(Vec.of(30, 18, 45)), Vec.of(0, 0, 0), 0));
             // back wall
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.back_wall_tex, Vec.of(this.room_width, this.room_height, 1), false, this.aabb.cube, Vec.of(0, 0, -1))
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.back_wall_tex, Vec.of(this.room_width, this.room_height, 1), this.aabb.cube, Vec.of(0, 0, -1))
                        .emplace(Mat4.translation(Vec.of(0, 18, 95)), Vec.of(0, 0, 0), 0));
             // floor
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.floor, Vec.of(this.room_width, 1, this.room_length), false, this.aabb.cube, Vec.of(0, 1, 0))
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.floor, Vec.of(this.room_width, 1, this.room_length), this.aabb.cube, Vec.of(0, 1, 0))
                        .emplace(Mat4.translation(Vec.of(0, -2, 45)), Vec.of(0, 0, 0), 0));
             // ceiling
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.ceiling, Vec.of(this.room_width, 1, this.room_length), false, this.aabb.cube, Vec.of(0, -1, 0))
-
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.ceiling, Vec.of(this.room_width, 1, this.room_length), this.aabb.cube, Vec.of(0, -1, 0))
                        .emplace(Mat4.translation(Vec.of(0, 38, 45)), Vec.of(0, 0, 0), 0));
         }
 
