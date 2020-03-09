@@ -41,8 +41,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 grey_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/grey_texture.jpg", false )}),
                 gold_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/gold_texture.jpg", false )}),
                 record_texture: context.get_instance( Phong_Shader ).material( Color.of(0.15,0.15,0.15,1) , {specularity: 1.}),
-                record_temp: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_test.jpg", false)}),
-                record_tex: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_tex.jpg", false)}),
+                record_temp: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: .9, texture:context.get_instance("assets/record_test.jpg", false)}),
+                record_tex: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: .9, texture:context.get_instance("assets/record_tex.jpg", false)}),
                 clear: context.get_instance( Phong_Shader ).material( Color.of(0, 0, 0, 0) ),
                 record_tex2: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_tex2.jpg", false)}),
                 wall_tex: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, specularity: 0.5, texture: context.get_instance("assets/wall_tex.jpg", false)}),
@@ -52,7 +52,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             }
 
             this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
-            this.lights = [new Light(Vec.of(7, 8, 10, 1), Color.of(1, 1, 1, 1), 100000)];
+            this.lights = [new Light(Vec.of(20, 20, 45, 1), Color.of(1, 1, 1, 1), 40000), new Light(Vec.of(10, 37, -35, 1), Color.of(1, 1, 1, 1), 40000)];
 
             // MUSIC-RELATED PROPS
             this.music = new Audio();
@@ -68,6 +68,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.shoot_sound = document.getElementById("shoot_sound");
             this.needl_sound = document.getElementById("needl_sound");
             this.point_sound = document.getElementById("point_sound");
+            this.bleep_sound = document.getElementById("bleep_sound");
+            this.bounce_sound = document.getElementById("bounce_sound");
             this.break_sound.volume = .5;
 
             this.btn_z = 0;
@@ -92,8 +94,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             // game started?
             this.broken = false;
+            // game over?
+            this.game_over = false;
 
-            this.tank_transform = Mat4.identity();
+            this.tank_transform = Mat4.translation([0,0.3,0]).times(Mat4.identity());
             this.aim_transform = this.tank_transform.times(Mat4.translation(Vec.of(0, 1, 10)));
 
             // Fixed transforms.
@@ -123,20 +127,26 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 'sphere': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
                 'disk': [Vec.of(-1, -0.05, -1), Vec.of(1, 0.05, 1)],
             }
-            // right wall          
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(1, 0, 0))
+
+                      
+            this.room_length = 50;
+            this.room_height = 20;
+            this.room_width = 30;  
+
+            // right wall   
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, this.room_height, this.room_length), false, this.aabb.cube, Vec.of(1, 0, 0))
                        .emplace(Mat4.translation(Vec.of(-30, 18, 45)), Vec.of(0, 0, 0), 0));
             // left wall
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(-1, 0, 0))
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, this.room_height, this.room_length), false, this.aabb.cube, Vec.of(-1, 0, 0))
                        .emplace(Mat4.translation(Vec.of(30, 18, 45)), Vec.of(0, 0, 0), 0));
             // back wall
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.back_wall_tex, Vec.of(30, 20, 1), false, this.aabb.cube, Vec.of(0, 0, -1))
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.back_wall_tex, Vec.of(this.room_width, this.room_height, 1), false, this.aabb.cube, Vec.of(0, 0, -1))
                        .emplace(Mat4.translation(Vec.of(0, 18, 95)), Vec.of(0, 0, 0), 0));
             // floor
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.floor, Vec.of(30, 1, 50), false, this.aabb.cube, Vec.of(0, 1, 0))
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.floor, Vec.of(this.room_width, 1, this.room_length), false, this.aabb.cube, Vec.of(0, 1, 0))
                        .emplace(Mat4.translation(Vec.of(0, -2, 45)), Vec.of(0, 0, 0), 0));
             // ceiling
-            this.bodies.push(new Wall(this.shapes.cube, this.materials.ceiling, Vec.of(30, 1, 50), false, this.aabb.cube, Vec.of(0, -1, 0))
+            this.bodies.push(new Wall(this.shapes.cube, this.materials.ceiling, Vec.of(this.room_width, 1, this.room_length), false, this.aabb.cube, Vec.of(0, -1, 0))
                        .emplace(Mat4.translation(Vec.of(0, 38, 45)), Vec.of(0, 0, 0), 0));
         }
 
@@ -215,7 +225,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.break_sound.play();
 
             this.attached = () => this.tank_transform.times(Mat4.translation([0, 10, -18]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0.1))));
-            this.lights = [new Light(Vec.of(-8, 7, -10, 1), Color.of(1, 1, 1, 1), 100000)];
             this.game_transitioning = true;
             this.needle_rising = true;
 
@@ -227,7 +236,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.hide_button("m", true);
             this.hide_button("r", true);
 
-            this.step_size = .1;
+            this.step_size = .18;
             this.moving_forward = false;
             this.moving_left = false;
             this.moving_back = false;
@@ -381,215 +390,229 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 graphics_state.camera_transform = desired.map((x, i) => Vec.from(graphics_state.camera_transform[i]).mix(x, 0.04));
             }
 
-            // Button transform when pressed.
-            let btn_transform = Mat4.translation([0, -0.48, 3.45 + this.btn_z]).times(Mat4.scale([0.3, 0.3, 0.3]));
-            if (this.record_spinning && this.btn_z > -0.09) {
-                switch(this.btn_z) {
-                    case -.09:
-                        break;
-                    case -.06:
-                        this.btn_z = -.09;
-                        break;
-                    case -.03:
-                        this.btn_z = -.06;
-                        break;
-                    case 0:
-                        this.btn_z = -.03;
-                        break;
-                }
-            }
-            else if (this.record_spinning === false && this.btn_z < 0) {
-                switch(this.btn_z) {
-                    case 0:
-                        break;
-                    case -.03:
-                        this.btn_z = 0;
-                        break;
-                    case -.06:
-                        this.btn_z = -.03;
-                        break;
-                    case -.09:
-                        this.btn_z = -.06;
-                        break;
-                }
-            }
-
-            // Knob transform when volume is adjusted.
-            let slider_transform = Mat4.translation([1.5 + (this.slider_pos), -0.48, 3.45]).times(Mat4.scale([0.075, 0.3, 0.3]));
-
-            // Needle transform when record player is started/stopped.
-            
-            if (this.needle_locking === 1 && !this.broken) {
-                this.needle_vertical_pos -= 0.04;
-                if (this.needle_vertical_pos <= 0.2) {
-                    this.needle_vertical_pos = 0.2;
-                }
-            }
-            if (this.needle_locking === 2 && !this.broken) {
-                this.needle_vertical_pos += 0.04;
-                if (this.needle_vertical_pos >= 0.28) {
-                    this.needle_vertical_pos = 0.28;
-                }
-            }
-
-            if (this.needle_left && !this.broken) {
-                if ((this.needle_rotation_angle + this.needle_rotation_speed) <= this.song_angle) {
-                    this.needle_rotation_angle += this.needle_rotation_speed;
-                    if (this.needle_rotation_angle >= this.song_angle) {
-                        this.needle_rotation_angle = this.song_angle;
-                        this.needle_left = false;
+            if (!this.game_over) {
+                // Button transform when pressed.
+                let btn_transform = Mat4.translation([0, -0.48, 3.45 + this.btn_z]).times(Mat4.scale([0.3, 0.3, 0.3]));
+                if (this.record_spinning && this.btn_z > -0.09) {
+                    switch(this.btn_z) {
+                        case -.09:
+                            break;
+                        case -.06:
+                            this.btn_z = -.09;
+                            break;
+                        case -.03:
+                            this.btn_z = -.06;
+                            break;
+                        case 0:
+                            this.btn_z = -.03;
+                            break;
                     }
                 }
-                else if ((this.needle_rotation_angle + this.needle_rotation_speed) <= this.song_angle_two) {
-                    this.needle_rotation_angle += this.needle_rotation_speed;
-                    if (this.needle_rotation_angle >= this.song_angle_two) {
-                        this.needle_rotation_angle = this.song_angle_two;
-                        this.needle_left = false;
+                else if (this.record_spinning === false && this.btn_z < 0) {
+                    switch(this.btn_z) {
+                        case 0:
+                            break;
+                        case -.03:
+                            this.btn_z = 0;
+                            break;
+                        case -.06:
+                            this.btn_z = -.03;
+                            break;
+                        case -.09:
+                            this.btn_z = -.06;
+                            break;
                     }
                 }
-            }
-            if (this.needle_right && !this.broken) {
-                if ((this.needle_rotation_angle - this.needle_rotation_speed) >= this.song_angle) {
-                    this.needle_rotation_angle -= this.needle_rotation_speed;
-                    if (this.needle_rotation_angle <= this.song_angle) {
-                        this.needle_rotation_angle = this.song_angle;
-                        this.needle_right = false;
+
+                // Knob transform when volume is adjusted.
+                let slider_transform = Mat4.translation([1.5 + (this.slider_pos), -0.48, 3.45]).times(Mat4.scale([0.075, 0.3, 0.3]));
+
+                // Needle transform when record player is started/stopped.
+                
+                if (this.needle_locking === 1 && !this.broken) {
+                    this.needle_vertical_pos -= 0.04;
+                    if (this.needle_vertical_pos <= 0.2) {
+                        this.needle_vertical_pos = 0.2;
                     }
                 }
-                else if ((this.needle_rotation_angle - this.needle_rotation_speed) >= 0) {
-                    this.needle_rotation_angle -= this.needle_rotation_speed;
-                    if (this.needle_rotation_angle <= 0) {
-                        this.needle_rotation_angle = 0.0;
-                        this.needle_right = false;
+                if (this.needle_locking === 2 && !this.broken) {
+                    this.needle_vertical_pos += 0.04;
+                    if (this.needle_vertical_pos >= 0.28) {
+                        this.needle_vertical_pos = 0.28;
                     }
                 }
-            }
-            let needle_rotation = Mat4.rotation(this.needle_rotation_angle * .05, Vec.of(0,-1,0));
 
-            let disk_position = Mat4.translation(Vec.of(0,0.3,0));
-            let disk_scale = Mat4.scale(Vec.of(2.8,0.5,2.8));
-            let disk_rotation = Mat4.rotation(this.record_rotation_angle, Vec.of(0,1,0));
-
-            if(this.record_spinning) {
-                disk_rotation = disk_rotation.times(Mat4.rotation(0.004, Vec.of(0,0,(Math.random()-0.5) / 100.)));
-                this.record_rotation_angle += (this.record_rotation_speed)*2*Math.PI * dt;
-            }
-
-            let disk_transform = disk_position.times(disk_rotation.times(disk_scale));
-
-            // Movement translations.
-            if (this.moving_forward) {
-                this.tank_transform = this.tank_transform.times(Mat4.translation([0, this.step_size, 0]));
-            }
-            if (this.moving_left) {
-                this.tank_transform = this.tank_transform.times(Mat4.translation([this.step_size, 0, 0]));
-            }
-            if (this.moving_back) {
-                this.tank_transform = this.tank_transform.times(Mat4.translation([0, -this.step_size, 0]));
-            }
-            if (this.moving_right) {
-                this.tank_transform = this.tank_transform.times(Mat4.translation([-this.step_size, 0, 0]));
-            }
-
-            // Rotations for needle
-            if (this.rotating_left) {
-                this.needle_prev_rot += 0.01 * Math.PI;
-            }
-            if (this.rotating_right) {
-                this.needle_prev_rot -= 0.01 * Math.PI;
-            }
-            if (this.broken) {
-                needle_rotation = Mat4.rotation(this.needle_prev_rot, Vec.of(0, 1, 0));
-            }
-            
-            // Transitioning animation.
-            if (this.game_transitioning) {
-                if(this.disk_fall_pos < 25 && !this.broken) {
-                        let frag_matrix = Mat4.translation([this.tank_transform[0][3], this.tank_transform[1][3] + 0.3, this.tank_transform[2][3]]);
-                        for (let i = 0; i < 6; i++) {
-                            this.bodies.push(new Frag(this.shapes.disk_frag, this.materials.record_tex, Vec.of(2.8, 0.5, 2.8), true, this.aabb.disk)
-                                       .emplace(Mat4.rotation((i / 6) * 2 * Math.PI, Vec.of(0, 1, 0)).times(frag_matrix), 
-                                       Vec.of((Math.random() - 0.5) * 2, 1.5, -2).normalized().times(4), Math.random()));
+                if (this.needle_left && !this.broken) {
+                    if ((this.needle_rotation_angle + this.needle_rotation_speed) <= this.song_angle) {
+                        this.needle_rotation_angle += this.needle_rotation_speed;
+                        if (this.needle_rotation_angle >= this.song_angle) {
+                            this.needle_rotation_angle = this.song_angle;
+                            this.needle_left = false;
                         }
-                        this.broken = true;
-                }
-                               
-                this.needle_right = true;
-
-                // Disk falling.
-                this.disk_fall_pos -= this.fall_factor;
-                this.fall_factor *= 0.984;
-                if (this.disk_fall_pos <= 0) {
-                    this.disk_fall_pos = 0;
-                    this.game_transitioning = false;
-                    this.needle_transitioning = true;
-                }
-            }
-            if (this.needle_transitioning) {
-                // Needle moving to center.
-                if (this.needle_rising) {
-                    this.needle_y += 0.06;
-                    if (this.needle_y + this.needle_vertical_pos >= 2) {
-                        this.needle_rising = false;
-                        this.needle_translating = true;
+                    }
+                    else if ((this.needle_rotation_angle + this.needle_rotation_speed) <= this.song_angle_two) {
+                        this.needle_rotation_angle += this.needle_rotation_speed;
+                        if (this.needle_rotation_angle >= this.song_angle_two) {
+                            this.needle_rotation_angle = this.song_angle_two;
+                            this.needle_left = false;
+                        }
                     }
                 }
-                if (this.needle_translating) {
-                    this.needle_x -= 0.05;
-                    this.needle_z += 0.05;
-                    if (2.85 + this.needle_x <= 0) {
-                        this.needle_x = -2.85;
-                        this.needle_z = 2.85;
-                        this.needle_translating = false;
-                        this.needle_scaling = true;
+                if (this.needle_right && !this.broken) {
+                    if ((this.needle_rotation_angle - this.needle_rotation_speed) >= this.song_angle) {
+                        this.needle_rotation_angle -= this.needle_rotation_speed;
+                        if (this.needle_rotation_angle <= this.song_angle) {
+                            this.needle_rotation_angle = this.song_angle;
+                            this.needle_right = false;
+                        }
+                    }
+                    else if ((this.needle_rotation_angle - this.needle_rotation_speed) >= 0) {
+                        this.needle_rotation_angle -= this.needle_rotation_speed;
+                        if (this.needle_rotation_angle <= 0) {
+                            this.needle_rotation_angle = 0.0;
+                            this.needle_right = false;
+                        }
                     }
                 }
-                if (this.needle_scaling) {
-                    this.needle_scale_factor *= 1.02;
-                    if (this.needle_scale_factor >= 2.1) {
-                        this.needle_scale_factor = 2.1;
-                        this.needle_scaling = false;
-                        this.needle_falling = true;
+                let needle_rotation = Mat4.rotation(this.needle_rotation_angle * .05, Vec.of(0,-1,0));
+
+                let disk_position = Mat4.translation(Vec.of(0,0.3,0));
+                let disk_scale = Mat4.scale(Vec.of(2.8,0.5,2.8));
+                let disk_rotation = Mat4.rotation(this.record_rotation_angle, Vec.of(0,1,0));
+
+                if(this.record_spinning) {
+                    disk_rotation = disk_rotation.times(Mat4.rotation(0.004, Vec.of(0,0,(Math.random()-0.5) / 100.)));
+                    this.record_rotation_angle += (this.record_rotation_speed)*2*Math.PI * dt;
+                }
+
+                let disk_transform = disk_position.times(disk_rotation.times(disk_scale));
+
+                // Movement translations.
+                if (this.moving_forward) {
+                    if (this.tank_transform[1][3] < this.room_height * 2 - 15) {
+                        this.tank_transform = this.tank_transform.times(Mat4.translation([0, this.step_size, 0]));
                     }
                 }
-                if (this.needle_falling) {
-                    this.needle_y -= 0.025;
-                    if (this.needle_y + this.needle_vertical_pos <= 0.1) {
-                        this.needle_falling = false;
-                        this.music.pause();
-                        this.music.currentTime = 0;
-                        this.music.src = "";
-                        this.music.src = this.boss_music_path;
-                        this.music.play();
-                        this.music.loop = true;
-                        this.add_game_buttons();
+                if (this.moving_left) {
+                    if (this.tank_transform[0][3] < this.room_width - 5) {
+                        this.tank_transform = this.tank_transform.times(Mat4.translation([this.step_size, 0, 0]));
                     }
                 }
-            }
-            let needle_position = Mat4.translation(Vec.of(2.85 + this.needle_x,this.needle_vertical_pos + this.needle_y,-2.85 + this.needle_z));
-            let needle_scale = Mat4.scale(Vec.of(0.5*this.needle_scale_factor,0.5*this.needle_scale_factor,0.5*this.needle_scale_factor));
-            let needle_transform = needle_position.times(needle_rotation.times(needle_scale));
+                if (this.moving_back) {
+                    if (this.tank_transform[1][3] > 0.5) {
+                        this.tank_transform = this.tank_transform.times(Mat4.translation([0, -this.step_size, 0]));
+                    }
+                }
+                if (this.moving_right) {
+                    if (this.tank_transform[0][3] > -this.room_width + 5) {
+                        this.tank_transform = this.tank_transform.times(Mat4.translation([-this.step_size, 0, 0]));
+                    }
+                }
+                if (this.broken && !this.moving_back && !this.moving_forward && !this.moving_left && ! this.moving_right) {
+                    this.tank_transform = this.tank_transform.times(Mat4.translation([0, Math.sin(t * 6) / 85, 0]));
+                }
 
-            let game_disk_transform = Mat4.translation([0,this.disk_fall_pos,0]).times(disk_transform);
+                // Rotations for needle
+                if (this.rotating_left && this.needle_prev_rot <= 1.1) {
+                    this.needle_prev_rot += 0.01 * Math.PI;
+                }
+                if (this.rotating_right && this.needle_prev_rot >= -1.1) {
+                    this.needle_prev_rot -= 0.01 * Math.PI;
+                }
+                if (this.broken) {
+                    needle_rotation = Mat4.rotation(this.needle_prev_rot, Vec.of(0, 1, 0));
+                }
+                
+                // Transitioning animation.
+                if (this.game_transitioning) {
+                    if(this.disk_fall_pos < 25 && !this.broken) {
+                            let frag_matrix = Mat4.translation([this.tank_transform[0][3], this.tank_transform[1][3] + 0.3, this.tank_transform[2][3]]);
+                            for (let i = 0; i < 6; i++) {
+                                this.bodies.push(new Frag(this.shapes.disk_frag, this.materials.record_tex, Vec.of(2.8, 0.5, 2.8), true, this.aabb.disk)
+                                        .emplace(Mat4.rotation((i / 6) * 2 * Math.PI, Vec.of(0, 1, 0)).times(frag_matrix), 
+                                        Vec.of((Math.random() - 0.5) * 2, 1.5, -2).normalized().times(4), Math.random()));
+                            }
+                            this.broken = true;
+                    }
+                                
+                    this.needle_right = true;
 
-            /* Draws scene. */
+                    // Disk falling.
+                    this.disk_fall_pos -= this.fall_factor;
+                    this.fall_factor *= 0.984;
+                    if (this.disk_fall_pos <= 0) {
+                        this.disk_fall_pos = 0;
+                        this.game_transitioning = false;
+                        this.needle_transitioning = true;
+                    }
+                }
+                if (this.needle_transitioning) {
+                    // Needle moving to center.
+                    if (this.needle_rising) {
+                        this.needle_y += 0.06;
+                        if (this.needle_y + this.needle_vertical_pos >= 2) {
+                            this.needle_rising = false;
+                            this.needle_translating = true;
+                        }
+                    }
+                    if (this.needle_translating) {
+                        this.needle_x -= 0.05;
+                        this.needle_z += 0.05;
+                        if (2.85 + this.needle_x <= 0) {
+                            this.needle_x = -2.85;
+                            this.needle_z = 2.85;
+                            this.needle_translating = false;
+                            this.needle_scaling = true;
+                        }
+                    }
+                    if (this.needle_scaling) {
+                        this.needle_scale_factor *= 1.02;
+                        if (this.needle_scale_factor >= 2.1) {
+                            this.needle_scale_factor = 2.1;
+                            this.needle_scaling = false;
+                            this.needle_falling = true;
+                        }
+                    }
+                    if (this.needle_falling) {
+                        this.needle_y -= 0.025;
+                        if (this.needle_y + this.needle_vertical_pos <= 0.1) {
+                            this.needle_falling = false;
+                            this.music.pause();
+                            this.music.currentTime = 0;
+                            this.music.src = "";
+                            this.music.src = this.boss_music_path;
+                            this.music.play();
+                            this.music.loop = true;
+                            this.add_game_buttons();
+                        }
+                    }
+                }
+                let needle_position = Mat4.translation(Vec.of(2.85 + this.needle_x,this.needle_vertical_pos + this.needle_y,-2.85 + this.needle_z));
+                let needle_scale = Mat4.scale(Vec.of(0.5*this.needle_scale_factor,0.5*this.needle_scale_factor,0.5*this.needle_scale_factor));
+                let needle_transform = needle_position.times(needle_rotation.times(needle_scale));
 
-            this.shapes.box.draw(graphics_state, this.tank_transform.times(this.sliderbox_transform), this.materials.grey_texture);
-            //this.shapes.box.draw(graphics_state, this.tank_transform.times(this.sliderbox_transform), this.materials.record_temp);
+                let game_disk_transform = Mat4.translation([0,this.disk_fall_pos,0]).times(disk_transform);
 
-            this.shapes.button.draw(graphics_state, this.tank_transform.times(btn_transform), this.materials.phong_secondary);
-            this.shapes.record_player.draw(graphics_state, this.tank_transform.times(this.player_transform), this.materials.phong_primary);
-            this.shapes.button.draw(graphics_state, this.tank_transform.times(slider_transform), this.materials.phong_secondary);
-            this.shapes.needle.draw(graphics_state, this.tank_transform.times(needle_transform), this.materials.phong_secondary);
-            
-            // Decide whether to draw original disk or the game music disk.
-            if (!this.broken) {
-                this.shapes.disk.draw(graphics_state, this.tank_transform.times(disk_transform), this.materials.record_tex);
+                /* Draws scene. */
+
+                this.shapes.record_player.draw(graphics_state, this.tank_transform.times(this.player_transform), this.materials.phong_primary);
+                this.shapes.needle.draw(graphics_state, this.tank_transform.times(needle_transform), this.materials.phong_secondary);
+                
+                // Decide whether to draw original disk or the game music disk and whether to draw buttons.
+                if (!this.broken) {
+                    this.shapes.button.draw(graphics_state, this.tank_transform.times(slider_transform), this.materials.phong_secondary);
+                    this.shapes.box.draw(graphics_state, this.tank_transform.times(this.sliderbox_transform), this.materials.grey_texture);
+                    this.shapes.button.draw(graphics_state, this.tank_transform.times(btn_transform), this.materials.phong_secondary);
+                    this.shapes.disk.draw(graphics_state, this.tank_transform.times(disk_transform), this.materials.record_tex);
+                }
+                else {
+                    this.shapes.disk.draw(graphics_state, this.tank_transform.times(game_disk_transform), this.materials.record_tex2);
+                }
+
+                this.aim_transform = this.tank_transform.times(needle_rotation).times(Mat4.translation(Vec.of(0, 1, 10)));
             }
             else {
-                this.shapes.disk.draw(graphics_state, this.tank_transform.times(game_disk_transform), this.materials.record_tex2);
+                this.shapes.box.draw(graphics_state, Mat4.translation([0,5,-10]).times(Mat4.scale(Vec.of(10,10,10))), this.materials.grey_texture);
             }
-
-            this.aim_transform = this.tank_transform.times(needle_rotation).times(Mat4.translation(Vec.of(0, 1, 10)));
         }
     };
