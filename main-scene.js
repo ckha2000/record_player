@@ -45,6 +45,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 record_tex: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_tex.jpg", false)}),
                 clear: context.get_instance( Phong_Shader ).material( Color.of(0, 0, 0, 0) ),
                 record_tex2: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_tex2.jpg", false)}),
+                wall_tex: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, specularity: 0.5, texture: context.get_instance("assets/wall_tex.jpg", false)}),
             }
 
             this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
@@ -118,11 +119,14 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 'cube': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
                 'sphere': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
                 'disk': [Vec.of(-1, -0.05, -1), Vec.of(1, 0.05, 1)],
-            }          
+            }
+            // left wall          
             this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(1, 0, 0))
                        .emplace(Mat4.translation(Vec.of(-30, 18, 45)), Vec.of(0, 0, 0), 0));
+            // right wall
             this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(1, 20, 50), false, this.aabb.cube, Vec.of(-1, 0, 0))
                        .emplace(Mat4.translation(Vec.of(30, 18, 45)), Vec.of(0, 0, 0), 0));
+            // 
             this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(30, 20, 1), false, this.aabb.cube, Vec.of(0, 0, -1))
                        .emplace(Mat4.translation(Vec.of(0, 18, 95)), Vec.of(0, 0, 0), 0));
             this.bodies.push(new Wall(this.shapes.cube, this.materials.phong_secondary, Vec.of(30, 1, 50), false, this.aabb.cube, Vec.of(0, 1, 0))
