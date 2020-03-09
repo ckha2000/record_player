@@ -93,7 +93,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             // game over?
             this.game_over = false;
 
-            this.tank_transform = Mat4.identity();
+            this.tank_transform = Mat4.translation([0,0.3,0]).times(Mat4.identity());
             this.aim_transform = this.tank_transform.times(Mat4.translation(Vec.of(0, 1, 10)));
 
             // Fixed transforms.
@@ -487,7 +487,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     }
                 }
                 if (this.moving_back) {
-                    if (this.tank_transform[1][3] > 0) {
+                    if (this.tank_transform[1][3] > 0.5) {
                         this.tank_transform = this.tank_transform.times(Mat4.translation([0, -this.step_size, 0]));
                     }
                 }
@@ -496,12 +496,15 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                         this.tank_transform = this.tank_transform.times(Mat4.translation([-this.step_size, 0, 0]));
                     }
                 }
+                if (this.broken && !this.moving_back && !this.moving_forward && !this.moving_left && ! this.moving_right) {
+                    this.tank_transform = this.tank_transform.times(Mat4.translation([0, Math.sin(t * 6) / 85, 0]));
+                }
 
                 // Rotations for needle
-                if (this.rotating_left) {
+                if (this.rotating_left && this.needle_prev_rot <= 1.1) {
                     this.needle_prev_rot += 0.01 * Math.PI;
                 }
-                if (this.rotating_right) {
+                if (this.rotating_right && this.needle_prev_rot >= -1.1) {
                     this.needle_prev_rot -= 0.01 * Math.PI;
                 }
                 if (this.broken) {
