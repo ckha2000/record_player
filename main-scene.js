@@ -229,15 +229,17 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             
             this.record_spinning = true;
 
-            /**for (let i = 0; i < 6; i++) {
-                    this.bodies.push(new Body(this.shapes.disk_frag), this.materials.record_tex, Vec.of(1, 1, 1)
-                               .emplace)
-            }**/
+            let frag_matrix = Mat4.translation([this.tank_transform[0][3], this.tank_transform[1][3] + 0.3, this.tank_transform[2][3]]);
+            for (let i = 0; i < 6; i++) {
+                    this.bodies.push(new Frag(this.shapes.disk_frag, this.materials.record_tex, Vec.of(2.8, 0.5, 2.8), true, this.aabb.disk)
+                               .emplace(Mat4.rotation((i / 6) * 2 * Math.PI, Vec.of(0, 1, 0)).times(frag_matrix), 
+                               Vec.of((Math.random() - 0.5) * 2, 3, -2).normalized().times(4), Math.random()));
+            }
         }
 
         add_game_buttons() {
             document.getElementById("p").style.opacity = "1";
-            document.getElementById(id).style.cursor = "pointer";
+            document.getElementById("p").style.cursor = "pointer";
             this.key_triggered_button("SHOOT", [" "], this.shoot_item);
             this.new_line();
             this.new_line();
@@ -349,8 +351,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             for( let a of this.bodies )
             {
                 if (a.moveable)
-                    a.linear_velocity[1] += dt * -9.8;
+                    a.linear_velocity[1] += dt * -0.25;
 
+                this.bodies = this.bodies.filter( o => o.drawn_location[2][3] > -30); 
+                
                 if( a.linear_velocity.norm() == 0 )
                     continue;
                                                               // *** Collision process is here ***
@@ -531,8 +535,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 }
                 if (this.needle_scaling) {
                     this.needle_scale_factor *= 1.02;
-                    if (this.needle_scale_factor >= 2.3) {
-                        this.needle_scale_factor = 2.3;
+                    if (this.needle_scale_factor >= 2.1) {
+                        this.needle_scale_factor = 2.1;
                         this.needle_scaling = false;
                         this.needle_falling = true;
                     }

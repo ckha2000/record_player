@@ -1103,3 +1103,13 @@ window.Wall = window.classes.Wall =
         }
         perform_action( b ) {}
     }
+
+window.Frag = window.classes.Frag = 
+    class Frac extends Body
+    {
+        constructor( shape, material, size, moveable, aabb)
+        {
+            super(shape, material, size, moveable, aabb);
+        }
+        perform_action( b ) {}
+    }
