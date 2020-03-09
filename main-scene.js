@@ -9,7 +9,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             const r = context.width / context.height;
             context.globals.graphics_state.camera_transform = Mat4.translation([0, -2, -15]).times(Mat4.rotation(1.5, Vec.of(1,0,0)));  // Locate the camera here (inverted matrix).
-            this.attached = () => Mat4.translation([0, 1.5, 5]).times(Mat4.rotation(-.1, Vec.of(1,0,0)));
+            this.attached = () => Mat4.translation([0, 1.8, 5]).times(Mat4.rotation(-.2, Vec.of(1,0,0)));
             context.globals.graphics_state.projection_transform = Mat4.perspective(Math.PI / 4, r, .1, 1000);
 
 
@@ -205,7 +205,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.record_spinning = false;
             this.break_sound.play();
 
-            this.attached = () => this.tank_transform.times(Mat4.translation([0, 20, -20]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0.25))));
+            this.attached = () => this.tank_transform.times(Mat4.translation([0, 10, -18]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0.1))));
             this.lights = [new Light(Vec.of(-8, 7, -10, 1), Color.of(1, 1, 1, 1), 100000)];
             this.broken = true;
             this.game_transitioning = true;
@@ -478,13 +478,13 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             // Movement translations.
             if (this.moving_forward) {
-                this.tank_transform = this.tank_transform.times(Mat4.translation([0, 0, this.step_size]));
+                this.tank_transform = this.tank_transform.times(Mat4.translation([0, this.step_size, 0]));
             }
             if (this.moving_left) {
                 this.tank_transform = this.tank_transform.times(Mat4.translation([this.step_size, 0, 0]));
             }
             if (this.moving_back) {
-                this.tank_transform = this.tank_transform.times(Mat4.translation([0, 0, -this.step_size]));
+                this.tank_transform = this.tank_transform.times(Mat4.translation([0, -this.step_size, 0]));
             }
             if (this.moving_right) {
                 this.tank_transform = this.tank_transform.times(Mat4.translation([-this.step_size, 0, 0]));
