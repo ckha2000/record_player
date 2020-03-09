@@ -112,7 +112,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.needle_rotation_locked = true;
             this.needle_rotation_speed = 1;
             this.song_angle = 5;
-            this.song_angle_two = 10;
+            this.song_angle_two = 8;
             this.needle_left = false;
             this.needle_right = false;
             this.needle_prev_rot = 0;
@@ -124,14 +124,16 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             // PHYSICS RELATED OBJECTS
             this.num_targets = 0;
-            this.target_locations = new Array(20).fill(false).map(() => new Array(20).fill(false));
+            this.target_locations = new Array(30).fill(false).map(() => new Array(20).fill(false));
             this.spawn_timer = 0;
             this.aabb = {
                 'cube': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
                 'sphere': [Vec.of(-1, -1, -1), Vec.of(1, 1, 1)],
                 'disk': [Vec.of(-1, -0.05, -1), Vec.of(1, 0.05, 1)],
             }
-
+            this.num_shots = 3;
+            this.shot_recharge = 0;
+            this.points = 0;
                       
             this.room_length = 50;
             this.room_height = 20;
@@ -313,6 +315,9 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
         // SHOOTS A THING
         shoot_item() {
+            if (this.num_shots == 0)
+                return;
+
             this.shoot_sound.currentTime = 0;
             this.shoot_sound.play();
 
@@ -330,16 +335,18 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             this.bodies.push(new Projectile(this.shapes.disk, this.materials.record_tex2, Vec.of(1, 1, 1), this.aabb.disk)
                        .emplace(proj_transform, norm_dir.times(4), 0));
+
+            this.num_shots -= 1;
         }
 
         // MAKES THE TARGETS
         spawn_targets() {
                 while ( this.num_targets < 20 ) {b
-                        let target_location = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+                        let target_location = [Math.floor(Math.random() * 30), Math.floor(Math.random() * 20)];
                         if (!this.target_locations[target_location[0]][target_location[1]])
                         {
                                 this.bodies.push(new Target(this.shapes.cube, this.materials.target, Vec.of(1, 1, 1), this.aabb.cube)
-                                            .emplace(Mat4.translation([-10 + target_location[0], 10 + target_location[1], 45 + Math.floor(Math.random() * 20)]),
+                                            .emplace(Mat4.translation([-15 + target_location[0], 5 + target_location[1], 45 + Math.floor(Math.random() * 20)]),
                                             Vec.of(0, 0, 0), 0));
                                 this.target_locations[target_location[0]][target_location[1]] = true;
                                 this.num_targets += 1
@@ -398,8 +405,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                                                   // If we get here, we collided
                     a.perform_action( b );
 
-                    if (b.breakable && a.breakable) {
-                      this.target_locations[Math.round(b.center[0] + 10)][Math.round(b.center[1]- 10)] = false;
+                    if (b.breakable && a.breakable && b.linear_velocity.norm() == 0) {
+                      this.target_locations[Math.round(b.center[0] + 15)][Math.round(b.center[1] - 5)] = false;
 
                       this.bodies.push(new Target_Frag(this.shapes.cube, this.materials.phong_primary, Vec.of(0.25, 0.25, 0.25), this.aabb.cube)
                                  .emplace(b.drawn_location.times(Mat4.translation([0.5, 0.5, 0.5])), Vec.of(0, 0, 1).randomized(3), Math.random()));
@@ -422,6 +429,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                           this.bodies.push(new Frag(this.shapes.disk_frag, this.materials.record_tex2, Vec.of(1, 1, 1), this.aabb.disk)
                                      .emplace(b.drawn_location.times(Mat4.rotation((i / 6) * 2 * Math.PI, Vec.of(0, 1, 0))), 
                                      Vec.of(0 , 0, 1).randomized(3), Math.random()));
+
+                      this.points += 10;
                       }          
                       
                       this.num_targets -= 1;
@@ -438,6 +447,14 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             if(this.spawn_timer > 50) {
                     this.spawn_targets();
                     this.spawn_timer = 0;
+            }
+
+            this.shot_recharge += dt;
+
+            if(this.shot_recharge > 8) {
+                    if (this.num_shots < 3)
+                        this.num_shots += 1;
+                    this.shot_recharge = 0;
             }
         }
 
@@ -629,8 +646,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     }
                     if (this.needle_scaling) {
                         this.needle_scale_factor *= 1.02;
-                        if (this.needle_scale_factor >= 2.1) {
-                            this.needle_scale_factor = 2.1;
+                        if (this.needle_scale_factor >= 2.0) {
+                            this.needle_scale_factor = 2.0;
                             this.needle_scaling = false;
                             this.needle_falling = true;
                         }
