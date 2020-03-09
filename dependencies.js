@@ -1113,3 +1113,13 @@ window.Frag = window.classes.Frag =
         }
         perform_action( b ) {}
     }
+
+window.Target = window.classes.Target = 
+    class Target extends Body
+    {
+        constructor( shape, material, size, moveable, aabb )
+        {
+            super(shape, material, size, moveable, aabb);
+        }
+        perform_action( b ) {}
+    }

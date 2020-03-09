@@ -207,7 +207,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             this.attached = () => this.tank_transform.times(Mat4.translation([0, 10, -18]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0.1))));
             this.lights = [new Light(Vec.of(-8, 7, -10, 1), Color.of(1, 1, 1, 1), 100000)];
-            this.broken = true;
             this.game_transitioning = true;
             this.needle_rising = true;
 
@@ -228,13 +227,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.rotating_right = false;
             
             this.record_spinning = true;
-
-            let frag_matrix = Mat4.translation([this.tank_transform[0][3], this.tank_transform[1][3] + 0.3, this.tank_transform[2][3]]);
-            for (let i = 0; i < 6; i++) {
-                    this.bodies.push(new Frag(this.shapes.disk_frag, this.materials.record_tex, Vec.of(2.8, 0.5, 2.8), true, this.aabb.disk)
-                               .emplace(Mat4.rotation((i / 6) * 2 * Math.PI, Vec.of(0, 1, 0)).times(frag_matrix), 
-                               Vec.of((Math.random() - 0.5) * 2, 3, -2).normalized().times(4), Math.random()));
-            }
         }
 
         add_game_buttons() {
@@ -503,6 +495,16 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             
             // Transitioning animation.
             if (this.game_transitioning) {
+                if(this.disk_fall_pos < 25 && !this.broken) {
+                        let frag_matrix = Mat4.translation([this.tank_transform[0][3], this.tank_transform[1][3] + 0.3, this.tank_transform[2][3]]);
+                        for (let i = 0; i < 6; i++) {
+                            this.bodies.push(new Frag(this.shapes.disk_frag, this.materials.record_tex, Vec.of(2.8, 0.5, 2.8), true, this.aabb.disk)
+                                       .emplace(Mat4.rotation((i / 6) * 2 * Math.PI, Vec.of(0, 1, 0)).times(frag_matrix), 
+                                       Vec.of((Math.random() - 0.5) * 2, 1.5, -2).normalized().times(4), Math.random()));
+                        }
+                        this.broken = true;
+                }
+                               
                 this.needle_right = true;
 
                 // Disk falling.
