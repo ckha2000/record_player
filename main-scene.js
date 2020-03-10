@@ -134,6 +134,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.points = 0;
             this.remaining_time = 300;
             this.start_game = false;
+            this.third_person = true;
                       
             this.room_length = 50;
             this.room_height = 20;
@@ -279,6 +280,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.new_line();
             this.new_line();
             this.key_triggered_button("SHOOT", [" "], this.shoot_item);
+            this.key_triggered_button("CHANGE VIEW", ["t"], () => this.third_person = !this.third_person);
             this.new_line();
             this.new_line();
             this.key_triggered_button("Aim Left", ["q"], () => this.rotating_left = true, undefined, () => this.rotating_left = false);
@@ -290,6 +292,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.key_triggered_button("D", ["d"], () => this.moving_right = true, undefined, () => this.moving_right = false);
             this.new_line();
             this.new_line();
+            
         }
 
         hide_button(id, remove) {
@@ -398,6 +401,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.hide_button("a", true);
             this.hide_button("s", true);
             this.hide_button("d", true);
+            this.hide_button("t", true);
 
             const gameOverText = document.createElement("span");
             gameOverText.id = "game_over";
@@ -496,6 +500,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                           this.points += 12;
                           document.getElementById("score").textContent = "SCORE: " + this.points + (" (100 TO WIN) ");  
                           if (this.points >= 100) {
+                            this.points = 100;
+                            document.getElementById("score").textContent = "SCORE: " + this.points + (" (100 TO WIN) ")
                             this.bodies = [];
                             this.end_game();
                       }   
@@ -514,7 +520,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     let a_max_aabb = a.drawn_location.times( a.aabb[1].to4(1) ).to3();
 
                     let b_min_aabb = this.tank_transform.times( Vec.of(-1, -1, -1, 1) ).to3();
-                    let b_max_aabb = this.tank_transform.times( Vec.of(1, 1, 1, 1) ).to3();
+                    let b_max_aabb = this.tank_transform.times( Vec.of(1, 1.5, 1, 1) ).to3();
 
                                               // Check for intersections on the three axes          
                     if ( a_max_aabb[0] < b_min_aabb[0] || a_min_aabb[0] > b_max_aabb[0] ) continue; 
@@ -566,8 +572,16 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             const dt = graphics_state.animation_delta_time /1000;
 
             if (this.attached !== undefined) {
-                let desired = Mat4.inverse(this.attached().times(Mat4.translation([0, 0, 5])));
-                graphics_state.camera_transform = desired.map((x, i) => Vec.from(graphics_state.camera_transform[i]).mix(x, 0.04));
+                    if (!this.game_over && this.third_person && this.broken)
+                        this.attached = () => this.tank_transform.times(Mat4.translation([0, 9, -18]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0.07))));
+                    else if (!this.game_over && this.broken) 
+                        this.attached = () => this.aim_transform.times(Mat4.rotation(Math.PI, Vec.of(0,1,0.07)));
+                    
+                    let desired = Mat4.inverse(this.attached().times(Mat4.translation([0, 0, 5])));
+                    if (this.third_person || this.game_over)
+                        graphics_state.camera_transform = desired.map((x, i) => Vec.from(graphics_state.camera_transform[i]).mix(x, 0.04));
+                    else
+                        graphics_state.camera_transform = desired;     
             }
 
             if (!this.game_over) {
