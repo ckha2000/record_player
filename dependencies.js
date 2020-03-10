@@ -823,7 +823,6 @@ window.Phong_Shader = window.classes.Phong_Shader =
         }
     };
 
-
 window.Movement_Controls = window.classes.Movement_Controls =
     class Movement_Controls extends Scene_Component    // Movement_Controls is a Scene_Component that can be attached to a canvas, like any
     {                                                  // other Scene, but it is a Secondary Scene Component -- meant to stack alongside other
@@ -1082,8 +1081,8 @@ window.Projectile = window.classes.Projectile =
                 let y_rot = Math.atan(norm_dir[0] / norm_dir[2]);
 
                 let proj_transform = Mat4.translation(Vec.of(this.drawn_location[0][3], this.drawn_location[1][3], this.drawn_location[2][3]))
-                                         .times(Mat4.rotation(y_rot, Vec.of(0, 1, 0)))
-                                         .times(Mat4.rotation(-x_rot, Vec.of(1, 0, 0)));
+                                         .times(Mat4.rotation(-x_rot, Vec.of(1, 0, 0))
+                                         .times(Mat4.rotation(y_rot, Vec.of(0, 1, 0))));
 
                 super.emplace(proj_transform, new_linear_velocity, this.angular_velocity);
 

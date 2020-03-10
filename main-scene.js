@@ -98,6 +98,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.broken = false;
             // game over?
             this.game_over = false;
+            this.lost_game = false;
 
             this.tank_transform = Mat4.translation([0,0.3,0]).times(Mat4.identity());
             this.aim_transform = this.tank_transform.times(Mat4.translation(Vec.of(0, 1, 10)));
@@ -135,6 +136,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.num_shots = 3;
             this.shot_recharge = 0;
             this.points = 0;
+            this.remaining_time = 300;
+            this.start_game = false;
                       
             this.room_length = 50;
             this.room_height = 20;
@@ -142,10 +145,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             // right wall   
             this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, this.room_height, this.room_length), this.aabb.cube, Vec.of(1, 0, 0))
-                       .emplace(Mat4.translation(Vec.of(-30, 18, 45)), Vec.of(0, 0, 0), 0));
+                       .emplace(Mat4.translation(Vec.of(-31, 18, 45)), Vec.of(0, 0, 0), 0));
             // left wall
             this.bodies.push(new Wall(this.shapes.cube, this.materials.wall_tex, Vec.of(1, this.room_height, this.room_length), this.aabb.cube, Vec.of(-1, 0, 0))
-                       .emplace(Mat4.translation(Vec.of(30, 18, 45)), Vec.of(0, 0, 0), 0));
+                       .emplace(Mat4.translation(Vec.of(31, 18, 45)), Vec.of(0, 0, 0), 0));
             // back wall
             this.bodies.push(new Wall(this.shapes.cube, this.materials.back_wall_tex, Vec.of(this.room_width, this.room_height, 1), this.aabb.cube, Vec.of(0, 0, -1))
                        .emplace(Mat4.translation(Vec.of(0, 18, 95)), Vec.of(0, 0, 0), 0));
@@ -156,6 +159,8 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.bodies.push(new Wall(this.shapes.cube, this.materials.ceiling, Vec.of(this.room_width, 1, this.room_length), this.aabb.cube, Vec.of(0, -1, 0))
                        .emplace(Mat4.translation(Vec.of(0, 38, 45)), Vec.of(0, 0, 0), 0));
         }
+
+
 
         // MUSIC-RELATED FUNCTIONS
 
@@ -262,13 +267,18 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             const scoreText = document.createElement("span");
             scoreText.id = "score";
-            scoreText.textContent = "SCORE: " + this.points;
+            scoreText.textContent = "SCORE: " + this.points + " (100 TO WIN) ";
             const shotsText = document.createElement("span");
             shotsText.id = "shots";
             shotsText.textContent = "SHOTS REMAINING: " + this.num_shots;
+            const timerText = document.createElement("span");
+            timerText.id = "timer";
+            timerText.textContent = "TIME LEFT: " + (Math.round((this.remaining_time / 10) * 100) / 100);
             this.control_panel.appendChild(scoreText);
             this.new_line();
             this.control_panel.appendChild(shotsText);
+            this.new_line();
+            this.control_panel.appendChild(timerText);
 
             this.new_line();
             this.new_line();
@@ -343,8 +353,9 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             let x_rot = Math.atan(norm_dir[1] / norm_dir[2]);
             let y_rot = Math.atan(norm_dir[0] / norm_dir[2]);
 
-            let proj_transform = this.aim_transform.times(Mat4.rotation(y_rot, Vec.of(0, 1, 0)))
-                                                   .times(Mat4.rotation(-x_rot, Vec.of(1, 0, 0)));
+            let proj_transform = Mat4.translation(Vec.of(this.aim_transform[0][3], this.aim_transform[1][3], this.aim_transform[2][3]))
+                                     .times(Mat4.rotation(-x_rot, Vec.of(1, 0, 0))
+                                     .times(Mat4.rotation(y_rot, Vec.of(0, 1, 0))));
 
 
             this.bodies.push(new Projectile(this.shapes.disk, this.materials.record_tex2, Vec.of(1, 1, 1), this.aabb.disk)
@@ -380,6 +391,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.hide_button("p", true);
             this.hide_button("b", true);
             this.hide_button("shots", true);
+            this.hide_button("timer", true);
             this.hide_button(" ", true);
             this.hide_button("q", true);
             this.hide_button("w", true);
@@ -390,7 +402,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             const gameOverText = document.createElement("span");
             gameOverText.id = "game_over";
-            gameOverText.textContent = "GAME ENDED. REFRESH TO RESTART.";
+            if (this.lost_game)
+                gameOverText.textContent = "GAME OVER. REFRESH TO RESTART.";
+            else
+                gameOverText.textContent = "YOU WON! REFRESH TO RESTART.";
             const game_over_panel = this.control_panel.appendChild(gameOverText);
 
             this.music.pause();
@@ -438,7 +453,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 if (a.moveable)
                     a.linear_velocity[1] += dt * -0.25;
 
-                this.bodies = this.bodies.filter( o => o.drawn_location[2][3] > -30); 
+                this.bodies = this.bodies.filter( o => o.drawn_location[2][3] > -25 && o.drawn_location[1][3] > -20); 
                 
                 if( a.linear_velocity.norm() == 0 )
                     continue;
@@ -477,12 +492,15 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                                      .emplace(b.drawn_location.times(Mat4.rotation((i / 6) * 2 * Math.PI, Vec.of(0, 1, 0))), 
                                      Vec.of(0 , 0, 1).randomized(3), Math.random()));
                       }
-
-                      this.points += 10;
-                      document.getElementById("score").textContent = "SCORE: " + this.points;  
-                      if (this.points >= 100) {
-                        this.end_game();
+                      
+                      if (!this.game_over) {
+                          this.points += 10;
+                          document.getElementById("score").textContent = "SCORE: " + this.points + (" (100 TO WIN) ");  
+                          if (this.points >= 100) {
+                            this.bodies = [];
+                            this.end_game();
                       }   
+                      }
                       
                       this.num_targets -= 1;
                       this.bodies = this.bodies.filter( o => o != b && o != a);
@@ -491,16 +509,40 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     if (!a.breakable && !b.breakable && a.linear_velocity.norm() == 0)
                       this.bodies = this.bodies.filter(o => o != a);
                 }
+
+                if(a.breakable) {
+                    let a_min_aabb = a.drawn_location.times( a.aabb[0].to4(1) ).to3();
+                    let a_max_aabb = a.drawn_location.times( a.aabb[1].to4(1) ).to3();
+
+                    let b_min_aabb = this.tank_transform.times( Vec.of(-1, -1, -1, 1) ).to3();
+                    let b_max_aabb = this.tank_transform.times( Vec.of(1, 1, 1, 1) ).to3();
+
+                                              // Check for intersections on the three axes          
+                    if ( a_max_aabb[0] < b_min_aabb[0] || a_min_aabb[0] > b_max_aabb[0] ) continue; 
+                    if ( a_max_aabb[1] < b_min_aabb[1] || a_min_aabb[1] > b_max_aabb[1] ) continue; 
+                    if ( a_max_aabb[2] < b_min_aabb[2] || a_min_aabb[2] > b_max_aabb[2] ) continue; 
+                    
+                    if(!this.game_over) {
+                          this.bodies = [];
+                          this.lost_game = true;
+                          this.end_game();  
+                    }        
+                }
             }    
 
-            this.spawn_timer += dt;
+            if(this.start_game) {
+                    this.spawn_timer += dt;
+                    this.shot_recharge += dt;
+                    this.remaining_time -= dt;
+                    if (this.remaining_time <= 0)
+                        this.remaining_time = 0;
+                    document.getElementById("timer").textContent = "TIME LEFT: "  + (Math.round((this.remaining_time / 10) * 100) / 100);
+            }
 
             if(this.spawn_timer > 50) {
                     this.spawn_targets();
                     this.spawn_timer = 0;
             }
-
-            this.shot_recharge += dt;
 
             if(this.shot_recharge > 8) {
                     if (this.num_shots < 3) {
@@ -509,6 +551,12 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                     }
 
                     this.shot_recharge = 0;
+            }
+
+            if(this.remaining_time <= 0 && !this.game_over) {
+                    this.bodies = [];
+                    this.lost_game = true;
+                    this.end_game(); 
             }
         }
 
@@ -717,6 +765,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                             this.music.play();
                             this.music.loop = true;
                             this.add_game_buttons();
+                            this.start_game = true;
                         }
                     }
                 }
