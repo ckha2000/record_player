@@ -38,10 +38,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             {
                 phong_primary: context.get_instance( Phong_Shader ).material( Color.of(.8, .15, .25, 1)),
                 phong_secondary: context.get_instance( Phong_Shader ).material( Color.of(.2, .9, .5, 1)),
-                grey_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/grey_texture.jpg", false )}),
-                gold_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/gold_texture.jpg", false )}),
-                record_texture: context.get_instance( Phong_Shader ).material( Color.of(0.15,0.15,0.15,1) , {specularity: 1.}),
-                record_temp: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: .9, texture:context.get_instance("assets/record_test.jpg", false)}),
+                grey_texture: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ) , {ambient: 0.9, texture:context.get_instance( "assets/slider_tex.jpg", false )}),
                 record_tex: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: .9, texture:context.get_instance("assets/record_tex.jpg", false)}),
                 clear: context.get_instance( Phong_Shader ).material( Color.of(0, 0, 0, 0) ),
                 record_tex2: context.get_instance( Phong_Shader).material(Color.of(0,0,0,1), {ambient: 1, specularity: 1.0, texture:context.get_instance("assets/record_tex2.jpg", false)}),
@@ -50,6 +47,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 floor: context.get_instance( Phong_Shader ).material(Color.of(92/255,60/255,45/255,1), {ambient: 0.4, specularity: 0.5}),
                 back_wall_tex: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, specularity: 0.5, texture: context.get_instance("assets/back_wall_tex.jpg", false)}),
                 target: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, specularity: 0.5, texture: context.get_instance("assets/music_note.jpg", false)}),
+                game_over: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, specularity: 0.5, texture: context.get_instance("assets/game_over_tex.jpg", false)}),
             }
 
             this.default = context.get_instance(Phong_Shader).material(Color.of(1,1,1,1));
@@ -70,8 +68,6 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.shoot_sound = document.getElementById("shoot_sound");
             this.needl_sound = document.getElementById("needl_sound");
             this.point_sound = document.getElementById("point_sound");
-            this.bleep_sound = document.getElementById("bleep_sound");
-            this.bounce_sound = document.getElementById("bounce_sound");
             this.break_sound.volume = .5;
 
             this.btn_z = 0;
@@ -345,6 +341,9 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.shoot_sound.currentTime = 0;
             this.shoot_sound.play();
 
+            this.points -= 2;
+            document.getElementById("score").textContent = "SCORE: " + this.points + (" (100 TO WIN) ");  
+
             let direction = Vec.of(this.aim_transform[0][3] - this.tank_transform[0][3],
                                    this.aim_transform[1][3] - (this.tank_transform[1][3] + 1),
                                    this.aim_transform[2][3] - this.tank_transform[2][3]);
@@ -494,7 +493,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                       }
                       
                       if (!this.game_over) {
-                          this.points += 10;
+                          this.points += 12;
                           document.getElementById("score").textContent = "SCORE: " + this.points + (" (100 TO WIN) ");  
                           if (this.points >= 100) {
                             this.bodies = [];
@@ -794,7 +793,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 this.aim_transform = this.tank_transform.times(needle_rotation).times(Mat4.translation(Vec.of(0, 1, 10)));
             }
             else {
-                this.shapes.box.draw(graphics_state, Mat4.translation([0,15,-40]).times(Mat4.scale(Vec.of(20,20,20))), this.materials.back_wall_tex);
+                this.shapes.box.draw(graphics_state, Mat4.translation([0,15,-40]).times(Mat4.scale(Vec.of(20,20,20))), this.materials.game_over);
             }
         }
     };
