@@ -62,6 +62,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.song2_path =  "assets/audio/music2.wav";
             this.transition_path = "assets/audio/transition.wav";
             this.boss_music_path = "assets/audio/boss_music.wav";
+            this.game_over_path = "assets/audio/victory.wav";
 
             this.break_sound = document.getElementById("break_sound");
             this.slide_sound = document.getElementById("slide_sound");
@@ -230,7 +231,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.record_spinning = false;
             this.break_sound.play();
 
-            this.attached = () => this.tank_transform.times(Mat4.translation([0, 10, -18]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0.1))));
+            this.attached = () => this.tank_transform.times(Mat4.translation([0, 9, -18]).times(Mat4.rotation(Math.PI, Vec.of(0,1,0.07))));
             this.game_transitioning = true;
             this.needle_rising = true;
 
@@ -355,7 +356,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
         // MAKES THE TARGETS
         spawn_targets() {
-                while ( this.num_targets < 20 ) {b
+                while ( this.num_targets < 20 ) {
                         let target_location = [Math.floor(Math.random() * 30), Math.floor(Math.random() * 20)];
                         if (!this.target_locations[target_location[0]][target_location[1]])
                         {
@@ -367,6 +368,37 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                         }
 
                 }
+        }
+
+        end_game() {
+            this.game_over = true;
+            this.attached = () => Mat4.translation([0,15,-15]);
+
+            this.hide_button("volume", true);
+            this.hide_button("-", true);
+            this.hide_button("=", true);
+            this.hide_button("p", true);
+            this.hide_button("b", true);
+            this.hide_button("shots", true);
+            this.hide_button(" ", true);
+            this.hide_button("q", true);
+            this.hide_button("w", true);
+            this.hide_button("e", true);
+            this.hide_button("a", true);
+            this.hide_button("s", true);
+            this.hide_button("d", true);
+
+            const gameOverText = document.createElement("span");
+            gameOverText.id = "game_over";
+            gameOverText.textContent = "GAME ENDED. REFRESH TO RESTART.";
+            const game_over_panel = this.control_panel.appendChild(gameOverText);
+
+            this.music.pause();
+            this.music.currentTime = 0;
+            this.music.loop = false;
+            this.music.src = "";
+            this.music.src = this.game_over_path;
+            this.music.play();
         }
 
         make_control_panel()             // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
@@ -421,6 +453,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
                     if (b.breakable && a.breakable && b.linear_velocity.norm() == 0) {
                       this.target_locations[Math.round(b.center[0] + 15)][Math.round(b.center[1] - 5)] = false;
+                      this.point_sound.play();
 
                       this.bodies.push(new Target_Frag(this.shapes.cube, this.materials.phong_primary, Vec.of(0.25, 0.25, 0.25), this.aabb.cube)
                                  .emplace(b.drawn_location.times(Mat4.translation([0.5, 0.5, 0.5])), Vec.of(0, 0, 1).randomized(3), Math.random()));
@@ -446,7 +479,10 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                       }
 
                       this.points += 10;
-                      document.getElementById("score").textContent = "SCORE: " + this.points;     
+                      document.getElementById("score").textContent = "SCORE: " + this.points;  
+                      if (this.points >= 100) {
+                        this.end_game();
+                      }   
                       
                       this.num_targets -= 1;
                       this.bodies = this.bodies.filter( o => o != b && o != a);
@@ -622,7 +658,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 
                 // Transitioning animation.
                 if (this.game_transitioning) {
-                    if(this.disk_fall_pos < 25 && !this.broken) {
+                    if(this.disk_fall_pos < 20 && !this.broken) {
                             let frag_matrix = Mat4.translation([this.tank_transform[0][3], this.tank_transform[1][3] + 0.3, this.tank_transform[2][3]]);
                             for (let i = 0; i < 6; i++) {
                                 this.bodies.push(new Frag(this.shapes.disk_frag, this.materials.record_tex, Vec.of(2.8, 0.5, 2.8), this.aabb.disk)
@@ -709,7 +745,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                 this.aim_transform = this.tank_transform.times(needle_rotation).times(Mat4.translation(Vec.of(0, 1, 10)));
             }
             else {
-                this.shapes.box.draw(graphics_state, Mat4.translation([0,5,-10]).times(Mat4.scale(Vec.of(10,10,10))), this.materials.grey_texture);
+                this.shapes.box.draw(graphics_state, Mat4.translation([0,15,-40]).times(Mat4.scale(Vec.of(20,20,20))), this.materials.back_wall_tex);
             }
         }
     };
