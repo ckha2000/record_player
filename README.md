@@ -22,6 +22,11 @@ Note: The player may switch between third and first person cameras to make shoot
    * Implemented game time, points system, and first/third person camera switching
 * Christopher Kha
 * Miles Kang
+   * Implemented record player functions (needle locking/unlocking, needle rotation, volume controls, etc.)
+   * Created the record player object as an obj file using Maya.
+   * Implemented the transition animation sequence, with the falling disk and the needle moving/scaling.
+   * Implemented dynamic key triggered button controls in both the record simulation and game.
+   * Composed the music and the sound effects.
 
 ### References
 
