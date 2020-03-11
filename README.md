@@ -6,6 +6,7 @@ Our project is separated into two components:
 * Record player simulation
   * Basic controls: needle unlocking, needle rotating, disk spinning, volume adjusting
   * Music will only play when the needle is touching the disk and when the disk is spinning
+  * Two different songs will play depending on the position of the needle
   * Smash button to transition to target shooting game with realistic disk shattering effect
 * Target shooting game
   * Use ‘w’/‘a’/ ‘s’/ ‘d’ controls to move the tank left, right, up and down. 
