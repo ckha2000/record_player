@@ -135,6 +135,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.remaining_time = 300;
             this.start_game = false;
             this.third_person = true;
+            this.has_grav = false;
                       
             this.room_length = 50;
             this.room_height = 20;
@@ -279,8 +280,9 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
 
             this.new_line();
             this.new_line();
+            this.key_triggered_button("TOGGLE GRAVITY" ,["t"], () => this.has_grav = !this.has_grav);
             this.key_triggered_button("SHOOT", [" "], this.shoot_item);
-            this.key_triggered_button("CHANGE VIEW", ["t"], () => this.third_person = !this.third_person);
+            this.key_triggered_button("CHANGE VIEW", ["c"], () => this.third_person = !this.third_person);
             this.new_line();
             this.new_line();
             this.key_triggered_button("Aim Left", ["q"], () => this.rotating_left = true, undefined, () => this.rotating_left = false);
@@ -360,7 +362,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
                                      .times(Mat4.rotation(y_rot, Vec.of(0, 1, 0))));
 
 
-            this.bodies.push(new Projectile(this.shapes.disk, this.materials.record_tex2, Vec.of(1, 1, 1), this.aabb.disk)
+            this.bodies.push(new Projectile(this.shapes.disk, this.materials.record_tex2, Vec.of(1, 1, 1), this.has_grav, this.aabb.disk)
                        .emplace(proj_transform, norm_dir.times(4), 0));
 
             this.num_shots -= 1;
@@ -401,6 +403,7 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             this.hide_button("a", true);
             this.hide_button("s", true);
             this.hide_button("d", true);
+            this.hide_button("c", true);
             this.hide_button("t", true);
 
             const gameOverText = document.createElement("span");
