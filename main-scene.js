@@ -56,11 +56,11 @@ window.Record_Player_Simulator = window.classes.Record_Player_Simulator =
             // MUSIC-RELATED PROPS
             this.music = new Audio();
 
-            this.song1_path = "assets/audio/music.mp3";
-            this.song2_path =  "assets/audio/music2.mp3";
-            this.transition_path = "assets/audio/transition.mp3";
-            this.boss_music_path = "assets/audio/boss_music.mp3";
-            this.game_over_path = "assets/audio/victory.mp3";
+            this.song1_path = "assets/audio/music.wav";
+            this.song2_path =  "assets/audio/music2.wav";
+            this.transition_path = "assets/audio/transition.wav";
+            this.boss_music_path = "assets/audio/boss_music.wav";
+            this.game_over_path = "assets/audio/victory.wav";
 
             this.break_sound = document.getElementById("break_sound");
             this.slide_sound = document.getElementById("slide_sound");
