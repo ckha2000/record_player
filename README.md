@@ -12,11 +12,17 @@ Our project is separated into two components:
   * Projectiles will not break upon hitting a wall and instead correctly ricochet
   * Game over if projectile hits the player or time runs out
   * Score 100 points to win
+Note: The player may switch between third and first person cameras to make shooting targets easier
 
 ### Team Members and Contributions
 
 * Joshua Young
    * Implemented collision detection and object physics
    * Implemented game mechanics for firing projectiles, spawning targets, and shattering targets/projectiles
+   * Implemented game time, points system, and first/third person camera switching
 * Christopher Kha
 * Miles Kang
+
+### References
+
+ * https://github.com/encyclopedia-of-code/tiny-graphics-js
