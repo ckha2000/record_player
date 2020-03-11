@@ -1066,9 +1066,9 @@ window.Simulation = window.classes.Simulation =
 window.Projectile = window.classes.Projectile = 
     class Projectile extends Body 
     {
-        constructor( shape, material, size, aabb )
+        constructor( shape, material, size, moveable, aabb )
         { 
-            super(shape, material, size, false, aabb, true); 
+            super(shape, material, size, moveable, aabb, true); 
             this.cur_collision = undefined;
         }
         perform_action( b )
